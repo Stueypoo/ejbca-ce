@@ -424,8 +424,9 @@
 			<formatter type="xml" />
 			<batchtest fork="yes" todir="${reports.dir}">
 				<fileset dir="${systemtests.build.test.dir}">
+					<include name="org/ejbca/core/protocol/scep/ScepRenewalTests.class" />
 					<include name="org/ejbca/core/protocol/scep/ProtocolScepHttpTest.class" />
-					<include name="org/ejbca/core/protocol/scep/ProtocolOcspHttpTest.class" />
+					<include name="org/ejbca/core/protocol/ocsp/ProtocolOcspHttpTest.class" />
 					<include name="org/ejbca/core/protocol/cmp/CrmfRequestTest.class" />
 					<include name="org/ejbca/core/protocol/cmp/CrmfRARequestTest.class" />
 					<include name="org/ejbca/ui/web/pub/WebdistHttpTest.class" />
