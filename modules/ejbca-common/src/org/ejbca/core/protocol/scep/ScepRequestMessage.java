@@ -132,6 +132,9 @@ public class ScepRequestMessage extends PKCS10RequestMessage implements RequestM
     public static final int SCEP_TYPE_GETCERTINITIAL = 20; // Used when request is in pending state.
     public static final int SCEP_TYPE_GETCRL = 22;
     public static final int SCEP_TYPE_GETCERT = 21;
+    // RFC 8894 allows for an extra Message type.
+    public static final int SCEP_TYPE_RENEWALREQ = 17;
+
 
     /**
      * SenderNonce in a request is used as recipientNonce when the server sends back a reply to the
@@ -382,7 +385,8 @@ public class ScepRequestMessage extends PKCS10RequestMessage implements RequestM
             }
 
             // If this is a PKCSReq
-            if ((messageType == ScepRequestMessage.SCEP_TYPE_PKCSREQ) || (messageType == ScepRequestMessage.SCEP_TYPE_GETCRL) || (messageType == ScepRequestMessage.SCEP_TYPE_GETCERTINITIAL)) {
+            if ((messageType == ScepRequestMessage.SCEP_TYPE_PKCSREQ) || (messageType == ScepRequestMessage.SCEP_TYPE_RENEWALREQ) 
+				|| (messageType == ScepRequestMessage.SCEP_TYPE_GETCRL) || (messageType == ScepRequestMessage.SCEP_TYPE_GETCERTINITIAL)) {
                 // Extract the contents, which is an encrypted PKCS10 if messageType == 19, and an encrypted issuer and subject if messageType == 20 (not extracted)
                 // and an encrypted IssuerAndSerialNumber if messageType == 22
                 ci = sd.getEncapContentInfo();
@@ -492,7 +496,7 @@ public class ScepRequestMessage extends PKCS10RequestMessage implements RequestM
         }
         
 
-        if (messageType == ScepRequestMessage.SCEP_TYPE_PKCSREQ) {
+        if ( (messageType == ScepRequestMessage.SCEP_TYPE_PKCSREQ) || (messageType == ScepRequestMessage.SCEP_TYPE_RENEWALREQ) ) {
             pkcs10 = new JcaPKCS10CertificationRequest(decBytes);
             if (log.isDebugEnabled() && !LogRedactionUtils.redactPii()) {
             	log.debug("Successfully extracted PKCS10:" + new String(Base64.encode(pkcs10.getEncoded())));
@@ -758,7 +762,7 @@ public class ScepRequestMessage extends PKCS10RequestMessage implements RequestM
                 init();
                 decrypt();
             }
-            if (messageType == SCEP_TYPE_PKCSREQ) {
+            if ( (messageType == SCEP_TYPE_PKCSREQ) || (messageType == ScepRequestMessage.SCEP_TYPE_RENEWALREQ) ) {
                 ret = super.getRequestDN();
             } else if (messageType == SCEP_TYPE_GETCERTINITIAL) {
                 ret = getCertInitialSubject;
