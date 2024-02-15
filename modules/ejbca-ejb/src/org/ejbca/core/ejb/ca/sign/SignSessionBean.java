@@ -530,7 +530,7 @@ public class SignSessionBean implements SignSessionLocal, SignSessionRemote {
        // Is the Signing Cert expired (or Pending)?
        try {
            certSigner.checkValidity();
-       } catch (CertificateExpiredException | CertificateNotYetValidException e) {
+       } catch (java.security.cert.CertificateExpiredException | java.security.cert.CertificateNotYetValidException e) {
            throw new AuthLoginException("Aborting SCEP renewal: PKCS7 signer certificate is not valid at this time.");
        } 
        
