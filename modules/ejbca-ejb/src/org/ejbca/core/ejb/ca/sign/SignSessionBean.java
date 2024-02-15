@@ -483,6 +483,66 @@ public class SignSessionBean implements SignSessionLocal, SignSessionRemote {
 
     }
 
+    
+    // Additional support functions for SCEP renewals
+
+    // Check if a certificate is self-signed. This check is performed cryptographically
+    // rather than simply checking the Subject DN and the Issuer DN.
+   public static boolean isSelfSigned(X509Certificate cert) throws SignRequestException { 
+       try {
+           // Try to verify certificate signature with its own public key
+           PublicKey key = cert.getPublicKey();
+           cert.verify(key);
+           return true;
+       } catch (SignatureException sigEx) {
+           // Invalid signature --> not self-signed
+           return false;
+       } catch (InvalidKeyException | NoSuchProviderException | NoSuchAlgorithmException | CertificateException ex) {
+           // Fail out...
+           throw new SignRequestException("Could not complete the self-sign check on the certificate. Details: "+ex.getMessage());
+       }
+   }
+
+   // A new custom parameter to store the time of the last SCEP renewal occurred for this User.
+   public final static String LASTSCEPRENEWAL = "lastsceprenewaltime";
+   
+   // Perform checks on the client certificate which signed the PKCS7 signature. These checks are to confirm that the
+   // certificate belongs to the client/User and the certificate is valid. Any problems will throw an exception.
+   private void checkClientCertificate( java.security.cert.X509Certificate certSigner,
+                                         Collection<Certificate> userCertificates) throws AuthLoginException {
+       // Check the User is associated with the Signer's certificate.
+       // Loop through to find a matching User certificate with the PKCS7 signing cert
+       boolean bSignerCertMatched = false;
+       log.debug("Checking User certificates include the Signer's certificate.");
+       if (userCertificates != null) {
+           for (Certificate certificate : userCertificates) {
+               //log.debug( certificate.toString());
+               if (  certificate.equals( certSigner) ) {
+                   bSignerCertMatched = true;
+                   break;
+               }
+           }
+       }
+       if (!bSignerCertMatched) {
+           throw new AuthLoginException("Aborting SCEP renewal: PKCS7 signer certificate is not associated with this User.");
+       }
+       
+       // Is the Signing Cert expired (or Pending)?
+       try {
+           certSigner.checkValidity();
+       } catch (CertificateExpiredException | CertificateNotYetValidException e) {
+           throw new AuthLoginException("Aborting SCEP renewal: PKCS7 signer certificate is not valid at this time.");
+       } 
+       
+       // Is the Signing cert revoked?
+       if ( certificateStoreSession.getStatus( certSigner.getIssuerDN().toString(), certSigner.getSerialNumber()).isRevoked() ) {
+           throw new AuthLoginException("Aborting SCEP renewal: PKCS7 signer certificate is revoked. Serial (hex)="+certSigner.getSerialNumber().toString(16));
+       }
+       
+       // That completes all the checks, just return now!
+   }
+
+    
     @Override
     public ResponseMessage createCertificate(final AuthenticationToken admin, final RequestMessage req,
                                              Class<? extends CertificateResponseMessage> responseClass, final EndEntityInformation suppliedUserData)
@@ -512,6 +572,54 @@ public class SignSessionBean implements SignSessionLocal, SignSessionRemote {
             // See if we need some key material to decrypt request
             final CryptoToken cryptoToken = cryptoTokenManagementSession.getCryptoToken(ca.getCAToken().getCryptoTokenId());
             setDecryptInfo(cryptoToken, req, ca);
+            
+            // FYI: SCEP requests can now be decrypted and processed.
+            
+            // Check if this is a SCEP renewal request. For a SCEP renewal, we can use the PKCS#7 signature to validate the
+            // User is legit. Otherwise, if an initial SCEP enrollment, then the User must be pre-registered with as password, and that
+            // password supplied in the CSR within the SCEP request.
+            boolean bScepRenewal = false;
+            java.security.cert.X509Certificate certSigner = null;
+            if ( req instanceof ScepRequestMessage) {
+                log.info("Procesing SCEP request. User="+req.getUsername());
+
+                // Check the PKCS7 signature, just to make sure it hasn't been tampered.
+                certSigner = (X509Certificate)((ScepRequestMessage)req).getSignerCert();
+                if (certSigner == null) {
+                    throw new SignRequestException("The signer's certificate from the SCEP request was not found. Cannot verify the request. Aborting.");
+                }
+                PublicKey pkSigner = certSigner.getPublicKey();
+                try {
+                    if ( !((ScepRequestMessage)req).verifySignature( pkSigner ) ) {
+                        throw new SignRequestException( "The PKCS7 signature in the SCEP request does not verify. Aborting." );
+                    }
+                } catch (OperatorCreationException  | CMSException e) {
+                    throw new SignRequestException( "The PKCS7 signature verification in the SCEP request caused an exception. Details: "+e.getMessage() );
+                }
+
+                // Lets check the CSR can be verified. This will force the decryption of the CSR within the SCEP request
+                if ( !req.verify()) {
+                    throw new SignRequestException( "The CSR within the SCEP request does not verify." );
+                }
+
+                // Check for a SCEP renewal. The normal test for SCEP renewal is to check the PKCS7 signer certificate is 
+                // not self-signed. 
+                if ( !isSelfSigned(certSigner)) {
+                
+                    // Looks like a renewal...
+                    log.debug("SCEP Renewal request");
+                    log.debug("PKCS7 signing cert="+certSigner.toString() );                
+
+                     // Identify the SCEP request as a 'renewal'.
+                    bScepRenewal = true;
+                    
+                    // The password in the request should not exist as it is not required. However, some existing code below will fail out
+                    // if the password is null. To avoid issues, we can set a fake password. There are no security concerns as the
+                    // password value is not used in SCEP renewals.
+                    req.setPassword( java.util.UUID.randomUUID().toString());
+                }
+            }
+            
             if (ca.isUseUserStorage() && req.getUsername() == null) {
                 String msg = intres.getLocalizedMessage("signsession.nouserinrequest", req.getRequestDN());
                 throw new SignRequestException(msg);
@@ -522,7 +630,83 @@ public class SignSessionBean implements SignSessionLocal, SignSessionRemote {
                 try {
                     // If we haven't done so yet, authenticate user. (Only if we store UserData for this CA.)
                     if (ca.isUseUserStorage() || (suppliedUserData == null && req.getUsername() != null && req.getPassword() != null)) {
-                        endEntityInformation = authUser(admin, req.getUsername(), req.getPassword());
+
+                        // Inserting code to process SCEP renewals.
+                        
+                        if (!bScepRenewal) {
+                            // Authenticate User with the username and password contained in the CSR
+                            endEntityInformation = authUser(admin, req.getUsername(), req.getPassword());
+                       } else {
+                           // SCEP renewal processing begins.. 
+                           
+                           // User is being authenticated by validation of the PKCS7 Signature and the signing certificate
+                            log.debug("Checking if Signing cert is acceptable authentication of the SCEP request.");  
+                            
+                            // Get the EE details
+                            endEntityInformation = endEntityAccessSession.findUser( req.getUsername());
+                            if ( endEntityInformation == null) {
+                                // Couldn't find the User.
+                                throw new NoSuchEndEntityException("Aborting SCEP renewal: User is not known.");
+                            }
+
+                           // Prevent the abuse of SCEP Renewals by a malicious client. As a valid certificate holder could perform unlimited renewals,
+                           // we want to impose a time interval that a User cannot perform a renewal.
+                           // A reasonable time interval is being set to 10% of the Signing certificate validity. Thus a client with a 1 yr certificate, 
+                           // could only perform a SCEP renewal every 36.5 days. 
+                            
+                           // Calculate a tenth of Signing certificate validity. 
+                           long lMinScepInterval = (certSigner.getNotAfter().getTime() - certSigner.getNotBefore().getTime()) / 10;
+                           
+                           // Get the current time
+                           long lNow = new Date().getTime();
+                           
+                           // Get the greater of Signing cert start date, or the last SCEP renewal (if one has happened already).
+                           // Note: The time of the last SCEP renewal is recorded within the User's information as Custom data.
+                           long lBeginInterval = certSigner.getNotBefore().getTime();
+                           org.cesecore.certificates.endentity.ExtendedInformation exInfo = endEntityInformation.getExtendedInformation();
+                           String sBeginInterval = null;
+                           if (exInfo != null) {
+                               sBeginInterval = exInfo.getCustomData(LASTSCEPRENEWAL);
+                           }
+                           if (sBeginInterval != null) {
+                               // There is a time recorded for the last SCEP renewal
+                                long lTemp = Long.valueOf(sBeginInterval);
+
+                                if (lTemp > lBeginInterval) {
+                                    lBeginInterval = lTemp;
+                                }
+                           } else sBeginInterval = ""; // Just so we don't cause issues next.
+                          
+                           // Now check if sufficient time has passed before allowing the renewal.
+                           // Note: Allowing a special 'test' case if the Custom data has a "0". This will allow the time interval to by bypassed once.
+                           if ( ( !sBeginInterval.equals("0")) && ( lNow < (lBeginInterval+ lMinScepInterval)) ) {
+                               // Abort
+                               throw new AuthLoginException("Aborting SCEP renewal: Renewal not permitted at this time. Try again in "+(lNow-lBeginInterval+lMinScepInterval)/60000+" minutes.");
+                           }
+                           
+                           // Check the validity of the signer's certificate.
+                           // We will need the set of certificates associated with this User.
+                           final Collection<Certificate> userCertificates = EJBTools
+                                   .unwrapCertCollection(certificateStoreSession.findCertificatesByUsername( req.getUsername() ));
+
+                           // Perform the certificate checks...any issues will throw an exception. 
+                           checkClientCertificate( certSigner, userCertificates);
+                            
+                            // The EE must be have status of "GENERATED" in order to perform a SCEP renewal. Any other status will cause an abort.
+                            // Note: If the status is NEW, this may indicate the CA is expecting an initial/first-time enrolment rather than a renewal.
+                            // This may apply when the EE policy is setup for mulitple certificates per User.
+                            if ( endEntityInformation.getStatus() != EndEntityConstants.STATUS_GENERATED ) {
+                                throw new AuthStatusException("Aborting SCEP renewal: The current User status is preventing renewals.");
+                            }
+
+                            
+                            // Set the User's status to NEW to allow the issuance of the next certificate for the User.
+                            endEntityInformation.setStatus( EndEntityConstants.STATUS_NEW);
+                          
+                            // The SCEP renewal has now been successfully authenticated, and the request may now proceed with normal processing
+                            // to issue to new certificate for the User.
+                        }
+                        
                         if (endEntityInformation != null && endEntityInformation.getExtendedInformation() != null
                                 && suppliedUserData != null && suppliedUserData.getExtendedInformation() != null) {
                             endEntityInformation.getExtendedInformation().setAccountBindingId(suppliedUserData.getExtendedInformation().getAccountBindingId());
@@ -561,6 +745,17 @@ public class SignSessionBean implements SignSessionLocal, SignSessionRemote {
                         if (ca.isUseUserStorage()) {
                             finishUser(ca, endEntityInformation);
                         }
+
+                        // Finish up any SCEP renewal activities.
+                        // The expectation is this code is reachable when a certificate is issued successfully.
+                        if (bScepRenewal) {
+                            // Add the time of this SCEP renewal into the End-Entity extended information.
+                            // This is used to prevent a client abusing the automatic SCEP renewal implementation.
+                            org.cesecore.certificates.endentity.ExtendedInformation exInfo = endEntityInformation.getExtendedInformation();
+                            exInfo.setCustomData(LASTSCEPRENEWAL, ""+new Date().getTime() );
+                            log.debug("Updating the scep renewal time="+exInfo.getCustomData(LASTSCEPRENEWAL));
+                        }
+
                     }
                 } catch (NoSuchEndEntityException e) {
                     // If we didn't find the entity return error message
@@ -570,6 +765,22 @@ public class SignSessionBean implements SignSessionLocal, SignSessionRemote {
                 }
             }
             ret.create();
+            
+        // Catch some exceptions so we can return a SCEP fail response
+        } catch (AuthLoginException e) {
+            log.error("Catching AuthLoginException: "+ e.getMessage());
+            ret = createRequestFailedResponse(admin, req, responseClass, FailInfo.NOT_AUTHORIZED, e.getMessage());
+        } catch (AuthStatusException e) {
+            log.error("Catching AuthStatusException: "+ e.getMessage());
+            ret = createRequestFailedResponse(admin, req, responseClass, FailInfo.BAD_REQUEST, e.getMessage());
+        } catch (NoSuchEndEntityException e) {
+            log.error("Catching NoSuchEndEntityException: "+ e.getMessage());
+            ret = createRequestFailedResponse(admin, req, responseClass, FailInfo.BAD_REQUEST, e.getMessage());
+        } catch (SignRequestException e) {
+            log.error("Catching SignRequestException: "+ e.getMessage());
+            ret = createRequestFailedResponse(admin, req, responseClass, FailInfo.BAD_MESSAGE_CHECK, e.getMessage());
+        // End of change. Other exceptions handled normally. 
+            
         } catch (CustomCertificateSerialNumberException e) {
             cleanUserCertDataSN(endEntityInformation);
             throw e;
