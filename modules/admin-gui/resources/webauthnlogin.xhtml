@@ -1,0 +1,166 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:f="jakarta.faces.core"
+    xmlns:h="jakarta.faces.html"
+    xmlns:ui="jakarta.faces.facelets"
+    xmlns:p="http://primefaces.org/ui"
+      >
+<ui:remove>
+    <!--
+    /*************************************************************************
+     *                                                                       *
+     *  EJBCA: The OpenSource Certificate Authority                          *
+     *                                                                       *
+     *  This software is free software; you can redistribute it and/or       *
+     *  modify it under the terms of the GNU Lesser General Public           *
+     *  License as published by the Free Software Foundation; either         *
+     *  version 2.1 of the License, or any later version.                    *
+     *                                                                       *
+     *  See terms of license at gnu.org.                                     *
+     *                                                                       *
+     *************************************************************************/
+    	 -->
+
+    <!--
+    WebAuthn Login page. To use WebAuthn to process an administrators FIDO token and provide an OAuth token
+    to allow access.
+     -->
+</ui:remove>
+
+
+<h:head>
+    <link rel="stylesheet" type="text/css" href="#{webAuthnLoginMBean.cssFile}"/>
+<script type="text/javascript">
+//import * as webauthnJson from "@github/webauthn-json";
+
+function bufferToBase64url(buffer){
+	  // Buffer to binary string
+	  const byteView = new Uint8Array(buffer);
+	  let str = "";
+	  for (const charCode of byteView) {
+	    str += String.fromCharCode(charCode);
+	  }
+
+	  // Binary string to base64
+	  const base64String = btoa(str);
+
+	  // Base64 to base64url
+	  // We assume that the base64url string is well-formed.
+	  const base64urlString = base64String.replace(/\+/g, "-").replace( /\//g,  "_").replace(/=/g, "");
+	  return base64urlString;
+	}
+	
+function base64urlToBuffer( baseurl64String) {
+		  // Base64url to Base64
+		  const padding = "==".slice(0, (4 - (baseurl64String.length % 4)) % 4);
+		  const base64String =
+		    baseurl64String.replace(/-/g, "+").replace(/_/g, "/") + padding;
+
+		  // Base64 to binary string
+		  const str = atob(base64String);
+
+		  // Binary string to buffer
+		  const buffer = new ArrayBuffer(str.length);
+		  const byteView = new Uint8Array(buffer);
+		  for (let i = 0; i &lt; str.length; i++) {
+		    byteView[i] = str.charCodeAt(i);
+		  }
+		  return buffer;
+		}
+	
+var request = #{webAuthnLoginMBean.pkco};
+if (request) { executeAssertionRequest();}
+
+function showError(err){
+	alert( err);
+}
+
+function executeAssertionRequest() {
+	//console.log('executeAssertionRequest->request', request);
+	
+	if (request){
+    
+      // Fix the ArrayBuffers
+      request.publicKey.challenge = base64urlToBuffer( request.publicKey.challenge );
+      request.publicKey.allowCredentials.forEach( function(obj) { obj.id=base64urlToBuffer(obj.id); });
+ 
+	  // Execute the WebAuthn 'get' function and process response
+      navigator.credentials.get(  request ).then(function (assertion) {
+        // Send new credential info to server for verification and registration.
+	    //console.log('executeAssertionRequest->response', assertion);
+    
+        // The response needs to be put into JSON, and have the bytes arrays converted to base64url
+        authenticatorData = new Uint8Array( assertion.response.authenticatorData);
+        clientDataJSON = new Uint8Array(assertion.response.clientDataJSON);
+        signature = new Uint8Array(assertion.response.signature);
+        userHandle = new Uint8Array(assertion.response.userHandle);
+
+	    // Check for ClentExtensionResults
+	    clientExtensionResults = {};
+        try {
+    	  clientExtensionResults = assertion.getClientExtensionResults();
+        } catch (e) {
+          console.info('getClientExtensionResults failed', e);
+        }
+
+        const data = {
+          id: assertion.id,
+          rawId: bufferToBase64url( assertion.rawId), 
+          type: assertion.type,
+          response: {
+        	authenticatorData: bufferToBase64url( authenticatorData),
+        	clientDataJSON   : bufferToBase64url( clientDataJSON),
+        	signature: bufferToBase64url( signature),
+        	userHandle: '', // Windows Hello returns this value, but Yubi-keys dont. Set to '' for every token. // bufferToBase64url( userHandle),
+          },
+          clientExtensionResults,
+        };
+
+	    document.getElementById("webAuthnAssertionForm:pkc").value = JSON.stringify( data );
+	    document.getElementById("webAuthnAssertionForm").submit();
+      }).catch(function (err) {
+        // No acceptable authenticator or user refused consent. Handle appropriately.
+        showError('The WebAuthn authentication process has been aborted. Please ensure you are using FIDO2 token that has been registered by this site.');
+      });
+	}
+    return;
+}
+
+</script>
+</h:head>
+<f:metadata>
+    <f:event type="preRenderView" listener="#{webAuthnLoginMBean.onLoginPageLoad}"/>
+</f:metadata>
+
+<h:body>
+    <!--  Due to PrimeFaces taking over all JS execution, there needs to be a call to a PF method early on, even for pages that don't use PF. -->
+    <p:inputText rendered="false" />
+    <h:panelGroup styleClass="loginPage" layout="block">
+        <h1>
+            <h:outputText value="#{webAuthnLoginMBean.firstHeader}"/>
+        </h1>
+        <h2>
+            <h:outputText value="#{webAuthnLoginMBean.secondHeader}"/>
+        </h2>
+        <h:panelGroup styleClass="loginText" layout="block">
+            <h:outputText value="#{webAuthnLoginMBean.text}"/>
+        </h:panelGroup>
+		<h:form id="webAuthnAssertionForm">
+			<h:panelGroup>
+				<h:outputText value="Username:" />
+				<h:inputText value="#{webAuthnLoginMBean.username}"
+					title="Enter your EJBCA username">
+					<f:validator validatorId="legalCharsValidator" />
+				</h:inputText>
+			</h:panelGroup>
+			<h:panelGroup><br /><br /></h:panelGroup>
+			<h:panelGroup>
+					<h:inputHidden id="pkc" value="#{webAuthnLoginMBean.pkc}" />
+					<h:commandButton value="WebAuthn Login" action="#{webAuthnLoginMBean.clickLoginLink}" />
+                    <h:commandButton value="#{web.text.CANCEL}" action="#{webAuthnLoginMBean.cancel}" immediate="true"/>
+			</h:panelGroup>
+        </h:form>
+    </h:panelGroup>
+</h:body>
+</html>

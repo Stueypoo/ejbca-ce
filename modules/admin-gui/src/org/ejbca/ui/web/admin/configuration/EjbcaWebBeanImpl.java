@@ -196,6 +196,8 @@ public class EjbcaWebBeanImpl implements EjbcaWebBean {
         AuthenticationToken administrator;
         String requestServerName;
         String currentRemoteIp;
+        // Stu 23MAR 24: The EJBCA 'username' in the DB. Blank if not known.
+        String databaseUsername = ""; 
     }
 
     private AuthState authState = new AuthState();
@@ -281,8 +283,9 @@ public class EjbcaWebBeanImpl implements EjbcaWebBean {
     /** Sets the current user and returns the global configuration */
     private GlobalConfiguration initializeInternal(final HttpServletRequest httpServletRequest, final String... resources) throws Exception {
         // Get some variables so we can detect if the TLS session and/or TLS client certificate changes within this session
-        final X509Certificate certificate = getClientX509Certificate(httpServletRequest);
-        final String fingerprint = CertTools.getFingerprintAsString(certificate);
+        // Stu: Removing two FINALs
+        X509Certificate certificate = getClientX509Certificate(httpServletRequest);
+        String fingerprint = CertTools.getFingerprintAsString(certificate);
         final String currentTlsSessionId = getTlsSessionId(httpServletRequest);
         final String oauthBearerToken = getBearerToken(httpServletRequest);
         final String oauthIdToken = getOauthIdToken(httpServletRequest);
@@ -306,6 +309,79 @@ public class EjbcaWebBeanImpl implements EjbcaWebBean {
             if (WebConfiguration.isAdminAuthenticationRequired() && certificate == null && oauthBearerToken == null) {
                 throw new AuthenticationNotProvidedException("Client certificate or OAuth bearer token required.");
             }
+
+            // Stu: 
+            // OAuth authentication...Doing first so we can perform a psuedo certificate authentication if using the
+            // internal WebAuthn OAuth provider.
+            oauth_if:
+                if (oauthBearerToken != null && stagingState.administrator == null) {
+                    try {
+                        stagingState.administrator = authenticationSession.authenticateUsingOAuthBearerToken(getOAuthConfiguration(), oauthBearerToken, oauthIdToken);
+                        
+                        // Stu: 09APR24
+                        // If the OAuth authentication provides a certificate, then revert to certificate authentication
+                        final OAuth2AuthenticationToken oauth2Admin = (OAuth2AuthenticationToken) stagingState.administrator;
+                        final OAuth2Principal principal = oauth2Admin.getClaims();
+
+                        if ( principal.getSubject().startsWith("#Certificate=") ) {
+                            // A certificate fingerprint was given by the internal WebAuthn Login provider
+                            // Extract the certificate, so we can then let the Certificate Authentication handle it.
+                            final String sCertFingerPrint = principal.getSubject().substring(13);
+                            // Lookup the actual certificate
+                            certificate = (X509Certificate) certificateStoreSession.findCertificateByFingerprint(sCertFingerPrint);
+                            if ( certificate != null) {
+                                // Certificate found, so lets do a psuedo certificate authentication
+                                fingerprint = sCertFingerPrint;
+                                log.info("Switching to 'Psuedo' certificate authentication"); 
+                             break oauth_if;
+                            }
+                        }
+                    } catch (TokenExpiredException e) {
+                        String refreshToken = getRefreshToken(httpServletRequest);
+                        if (refreshToken != null) {
+                            OAuthGrantResponseInfo token = authenticationSession.refreshOAuthBearerToken(getOAuthConfiguration(), oauthBearerToken, oauthIdToken, refreshToken);
+                            if (token != null) {
+                                httpServletRequest.getSession(true).setAttribute("ejbca.bearer.token", token.getAccessToken());
+                                if (token.getIdToken() != null) {
+                                    httpServletRequest.getSession(true).setAttribute("ejbca.id.token", token.getIdToken());
+                                }
+                                if (token.getRefreshToken() != null) {
+                                    httpServletRequest.getSession(true).setAttribute("ejbca.refresh.token", token.getRefreshToken());
+                                }
+                                stagingState.administrator = authenticationSession.authenticateUsingOAuthBearerToken(getOAuthConfiguration(),
+                                        token.getAccessToken(), token.getIdToken());
+                            }
+                        }
+                    }
+                    if (stagingState.administrator == null) {
+                        throw new AuthenticationFailedException("Authentication failed using OAuth Bearer Token");
+                    }
+                    stagingState.isAuthenticatedWithToken = true;
+                    stagingState.oauthAuthenticationToken = oauthBearerToken;
+                    stagingState.oauthIdToken = oauthIdToken;
+                    final Map<String, Object> details = new LinkedHashMap<>();
+                    final OAuth2AuthenticationToken oauth2Admin = (OAuth2AuthenticationToken) stagingState.administrator;
+                    final OAuth2Principal principal = oauth2Admin.getClaims();
+                    details.put("keyhash", oauth2Admin.getPublicKeyBase64Fingerprint());
+                    putOauthTokenDetails(details, principal);
+                    if (oauth2Admin.getProviderLabel() != null) {
+                        details.put("provider", oauth2Admin.getProviderLabel());
+                    }
+                    if (!checkRoleMembershipAndLog(httpServletRequest, "OAuth Bearer Token", null, principal.getSubject(), details)) {
+                        throw new AuthenticationFailedException("Authentication failed for bearer token with no access: " + principal.getName());
+                    }
+                    stagingState.usercommonname = principal.getDisplayName();
+                    // Stu: 23MAR24
+                    // Check if the User actually has a database entry. It may not if using a 3rd party OAuth provider
+                    if (endEntityManagementSession.existsUser(stagingState.usercommonname)) {
+                        stagingState.databaseUsername=stagingState.usercommonname; 
+                        log.info("OAuth login-> The User '"+stagingState.databaseUsername+"' has a DB account.");
+                    }
+                }
+                
+            // Stu: 09Apr24
+            // Moving the Certificate authentication to after the OAuth. This is to allow the internal WebAuthn Login to
+            // perform a psuedo certificate authentication.
             if (certificate != null) {
                 stagingState.administrator = authenticationSession.authenticateUsingClientCertificate(certificate);
                 if (stagingState.administrator == null) {
@@ -331,6 +407,15 @@ public class EjbcaWebBeanImpl implements EjbcaWebBean {
                     if (!endEntityManagementSession.checkIfCertificateBelongToUser(serno, issuerDN)) {
                         throw new AuthenticationFailedException("Certificate with SN " + serno + " and issuerDN '" + issuerDN + "' did not belong to any user in the database.");
                     }
+                    
+                    // Stu: 23 MAR 24
+                    // For WebAuthn registration, will need the 'username' in the DB for the certificate owner
+                    final String sUserName = certificateStoreSession.findUsernameByCertSerno( serno, issuerDN);
+                    if (sUserName != null) {
+                        stagingState.databaseUsername = sUserName;
+                    }
+
+
                     final Map<String, Object> details = new LinkedHashMap<>();
                     if (certificateStoreSession.findCertificateByIssuerAndSerno(issuerDN, serno) == null) {
                         details.put("msg", "Logging in: Administrator Certificate is issued by external CA and not present in the database.");
@@ -346,45 +431,7 @@ public class EjbcaWebBeanImpl implements EjbcaWebBean {
                     }
                 }
             }
-            if (oauthBearerToken != null && stagingState.administrator == null) {
-                try {
-                    stagingState.administrator = authenticationSession.authenticateUsingOAuthBearerToken(getOAuthConfiguration(), oauthBearerToken, oauthIdToken);
-                } catch (TokenExpiredException e) {
-                    String refreshToken = getRefreshToken(httpServletRequest);
-                    if (refreshToken != null) {
-                        OAuthGrantResponseInfo token = authenticationSession.refreshOAuthBearerToken(getOAuthConfiguration(), oauthBearerToken, oauthIdToken, refreshToken);
-                        if (token != null) {
-                            httpServletRequest.getSession(true).setAttribute("ejbca.bearer.token", token.getAccessToken());
-                            if (token.getIdToken() != null) {
-                                httpServletRequest.getSession(true).setAttribute("ejbca.id.token", token.getIdToken());
-                            }
-                            if (token.getRefreshToken() != null) {
-                                httpServletRequest.getSession(true).setAttribute("ejbca.refresh.token", token.getRefreshToken());
-                            }
-                            stagingState.administrator = authenticationSession.authenticateUsingOAuthBearerToken(getOAuthConfiguration(),
-                                    token.getAccessToken(), token.getIdToken());
-                        }
-                    }
-                }
-                if (stagingState.administrator == null) {
-                    throw new AuthenticationFailedException("Authentication failed using OAuth Bearer Token");
-                }
-                stagingState.isAuthenticatedWithToken = true;
-                stagingState.oauthAuthenticationToken = oauthBearerToken;
-                stagingState.oauthIdToken = oauthIdToken;
-                final Map<String, Object> details = new LinkedHashMap<>();
-                final OAuth2AuthenticationToken oauth2Admin = (OAuth2AuthenticationToken) stagingState.administrator;
-                final OAuth2Principal principal = oauth2Admin.getClaims();
-                details.put("keyhash", oauth2Admin.getPublicKeyBase64Fingerprint());
-                putOauthTokenDetails(details, principal);
-                if (oauth2Admin.getProviderLabel() != null) {
-                    details.put("provider", oauth2Admin.getProviderLabel());
-                }
-                if (!checkRoleMembershipAndLog(httpServletRequest, "OAuth Bearer Token", null, principal.getSubject(), details)) {
-                    throw new AuthenticationFailedException("Authentication failed for bearer token with no access: " + principal.getName());
-                }
-                stagingState.usercommonname = principal.getDisplayName();
-            }
+            
             if (stagingState.administrator == null) {
                 stagingState.administrator = authenticationSession.authenticateUsingNothing(stagingState.currentRemoteIp, httpServletRequest.isSecure());
                 final Map<String, Object> details = new LinkedHashMap<>();
@@ -542,6 +589,11 @@ public class EjbcaWebBeanImpl implements EjbcaWebBean {
     @Override
     public String getUsersCommonName() {
         return authState.usercommonname;
+    }
+
+    /** Returns the User's 'username' in the DB (if known). Applies when certificate login is used.*/
+    public String getDatabaseUsername() {
+        return authState.databaseUsername;
     }
 
     /** Returns the users certificate serialnumber, user to id the adminpreference. */

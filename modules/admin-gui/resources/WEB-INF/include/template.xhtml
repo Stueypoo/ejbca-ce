@@ -110,6 +110,7 @@
 	   		<p:menuitem id="sysConfigGlobal" url="#{adminMenuBean.adminWebUrl}sysconfig/systemconfiguration.xhtml" rendered="#{adminMenuBean.authorizedToConfigureSystem}" value="#{web.text.NAV_SYSTEMCONFIGURATION}"/>
 	   		<p:menuitem id="sysConfigUpgrade" url="#{adminMenuBean.adminWebUrl}upgrade.xhtml" rendered="#{adminMenuBean.authorizedToConfigureSystem and adminMenuBean.upgradeRequired}" value="#{web.text.NAV_SYSTEMUPGRADE}"/>
 		    <p:menuitem url="#{adminMenuBean.adminWebUrl}mypreferences.xhtml" value="#{web.text.NAV_MYPREFERENCES}"/> 	
+		    <p:menuitem url="#{adminMenuBean.adminWebUrl}mywebauthnreg.xhtml" value="WebAuthn Registrations" rendered="#{myWebAuthnRegMBean.hasValidDbUsername()}" /> 	
       	</p:submenu>
 		<p:menuitem id="mainRaWeb" url="#{ejbcawebbean.getBaseUrl()}ra/" target="_ejbcaraweb" rel="noopener noreferer" rendered="#{adminMenuBean.authorizedToViewRaWeb}" value="#{web.text.RAWEB}"/>
         <p:menuitem id="mainDocumentation" url="#{ejbcawebbean.getHelpBaseURI() }/index.html" target="_ejbcaDocWindow" rel="noopener noreferer" rendered="#{adminMenuBean.helpEnabled}" value="#{web.text.DOCUMENTATION}"/>

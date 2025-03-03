@@ -2137,7 +2137,10 @@ public class SystemConfigMBean extends BaseManagedBean implements Serializable {
     }
     
     public boolean renderOAuthProviders() {
-        return authorizationSession.isAuthorizedNoLogging(getAdmin(), StandardRules.ROLE_ROOT.resource()) && getEjbcaWebBean().isRunningEnterprise();
+       // Stu 24SEP24
+       // Allow Oauth configuration on CE edition
+       return authorizationSession.isAuthorizedNoLogging(getAdmin(), StandardRules.ROLE_ROOT.resource());
+       //return authorizationSession.isAuthorizedNoLogging(getAdmin(), StandardRules.ROLE_ROOT.resource()) && getEjbcaWebBean().isRunningEnterprise();
     }
     
     public boolean renderCustomCertificateExtensions() {

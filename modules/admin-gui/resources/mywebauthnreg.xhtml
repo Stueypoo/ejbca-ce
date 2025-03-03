@@ -1,0 +1,260 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:f="jakarta.faces.core"
+    xmlns:h="jakarta.faces.html"
+    xmlns:ui="jakarta.faces.facelets">
+<ui:remove>
+	<!--
+    /*************************************************************************
+     *                                                                       *
+     *  EJBCA: The OpenSource Certificate Authority                          *
+     *                                                                       *
+     *  This software is free software; you can redistribute it and/or       *
+     *  modify it under the terms of the GNU Lesser General Public           *
+     *  License as published by the Free Software Foundation; either         *
+     *  version 2.1 of the License, or any later version.                    *
+     *                                                                       *
+     *  See terms of license at gnu.org.                                     *
+     *                                                                       *
+     *************************************************************************/
+     
+     $Id$
+     -->
+</ui:remove>
+
+<ui:composition template="/WEB-INF/include/template.xhtml">
+    <ui:param name="resourceBean" value="#{myWebAuthnRegMBean}" />
+	<ui:define name="content">
+ 
+<script type="text/javascript">
+//import * as webauthnJson from "@github/webauthn-json";
+
+function bufferToBase64url(buffer){
+	  // Buffer to binary string
+	  const byteView = new Uint8Array(buffer);
+	  let str = "";
+	  for (const charCode of byteView) {
+	    str += String.fromCharCode(charCode);
+	  }
+
+	  // Binary string to base64
+	  const base64String = btoa(str);
+
+	  // Base64 to base64url
+	  // We assume that the base64url string is well-formed.
+	  const base64urlString = base64String.replace(/\+/g, "-").replace( /\//g,  "_").replace(/=/g, "");
+	  return base64urlString;
+	}
+	
+function base64urlToBuffer( baseurl64String) {
+		  // Base64url to Base64
+		  const padding = "==".slice(0, (4 - (baseurl64String.length % 4)) % 4);
+		  const base64String =
+		    baseurl64String.replace(/-/g, "+").replace(/_/g, "/") + padding;
+
+		  // Base64 to binary string
+		  const str = atob(base64String);
+
+		  // Binary string to buffer
+		  const buffer = new ArrayBuffer(str.length);
+		  const byteView = new Uint8Array(buffer);
+		  for (let i = 0; i &lt; str.length; i++) {
+		    byteView[i] = str.charCodeAt(i);
+		  }
+		  return buffer;
+		}
+	
+var request = #{myWebAuthnRegMBean.pkco};
+if (request) { executeRegisterRequest();}
+
+
+function showError(err){
+	alert( err);
+}
+
+function executeRegisterRequest() {
+    // Fix the ArrayBuffers
+    request.publicKey.challenge = base64urlToBuffer( request.publicKey.challenge );
+    request.publicKey.user.id = base64urlToBuffer( request.publicKey.user.id );
+    request.publicKey.excludeCredentials.forEach( function(obj) { obj.id=base64urlToBuffer(obj.id); });
+
+ 
+	// Execute the WebAuthn 'create' function and process response
+    navigator.credentials.create(  request ).then(function (newCredentialInfo) {
+      // Send new credential info to server for verification and registration.
+	  console.log('executeRegisterRequest->response', newCredentialInfo);
+    
+      // The response needs to be put into JSON, and have the bytes arrays converted to base64url
+      attestationObject = new Uint8Array(newCredentialInfo.response.attestationObject);
+      clientDataJSON = new Uint8Array(newCredentialInfo.response.clientDataJSON);
+
+	  // Check for ClentExtensionResults
+	  clientExtensionResults = {};
+      try {
+    	  clientExtensionResults = newCredentialInfo.getClientExtensionResults();
+      } catch (e) {
+        console.info('getClientExtensionResults failed', e);
+      }
+ 
+      const data = {
+        id: newCredentialInfo.id,
+        rawId: bufferToBase64url( newCredentialInfo.rawId), 
+        type: newCredentialInfo.type,
+        response: {
+        	attestationObject: bufferToBase64url( attestationObject),
+        	clientDataJSON   : bufferToBase64url( clientDataJSON),
+        	// The 'transports' is optional. Not required.
+        	// transports: newCredentialInfo.response.getTransports() 
+        },
+        clientExtensionResults,
+        //The 'authenticatorAttachment' is optional. Not required.
+		// authenticatorAttachment: newCredentialInfo.authenticatorAttachment,
+      };
+
+	  document.getElementById("webAuthnRegistrationForm:pkc").value = JSON.stringify( data );
+	  document.getElementById("webAuthnRegistrationForm").submit();
+    }).catch(function (err) {
+      // No acceptable authenticator or user refused consent. Handle error appropriately.
+      showError('The WebAuthn registration process has been aborted. Please ensure you have a compatible FIDO2 token, and the PIN has been set by yourself.');
+    });
+    return;
+}
+
+</script>
+
+		<h:panelGroup>
+			<h1>
+			    <h:outputText value="#{web.text.ADMINISTRATORPREFERENCES} - WebAuthn Registrations" />
+			</h1>
+			<h2>
+                <h:outputText value="#{web.text.FORADMIN} #{myWebAuthnRegMBean.getCurrentLoggedInUsername()}" />
+			</h2>
+			<h3>
+                <h:outputText style="color:red;" value="#{myWebAuthnRegMBean.errorText}" />
+			</h3>
+		</h:panelGroup>
+
+		<h:panelGrid id="config" width="100%" styleClass="action" columns="2"
+			border="0" cellspacing="3" cellpadding="3" rowClasses="Row0,Row1"
+			columnClasses="myPreferencesColumn, myPreferencesColumn">
+			<h:panelGroup>
+                    &nbsp;
+                </h:panelGroup>
+			<h:panelGroup>
+                    &nbsp;
+                </h:panelGroup>
+
+			<h:panelGroup>
+				<h3>
+					<h:outputLabel value="Register a WebAuthn Token" />
+				</h3>
+				<h:outputLabel styleClass="help" value="To register a WebAuthn token, you will need a FIDO2 compatible device. To ensure two-factor authentication, you will be prompted to create a new PIN if the device does not have a PIN set." />
+			</h:panelGroup>
+			<h:panelGroup>
+				<h:form id="webAuthnRegistrationForm">
+					<h:inputHidden id="pkc" value="#{myWebAuthnRegMBean.pkc}" />
+					<h:commandButton value="Register" action="#{myWebAuthnRegMBean.clickRegister}" rendered="#{myWebAuthnRegMBean.hasValidDbUsername()}" />
+				</h:form>
+			</h:panelGroup>
+
+			<h:panelGroup>&nbsp;</h:panelGroup>
+			<h:panelGroup>&nbsp;</h:panelGroup>
+		</h:panelGrid>
+
+		<h3>
+			<h:outputText
+				value="Current WebAuthn Credentials" />
+		</h3>
+
+		<h:form id="rolemembers" rendered="true">
+			<h:dataTable id="list" value="#{myWebAuthnRegMBean.credentials}"
+				var="credentialId" styleClass="fullwidth grid fixBlankRow"
+				headerClass="listHeader" rowClasses="Row0,Row1"
+				columnClasses="caColumn alignmiddle,typeColumn alignmiddle,typeColumn alignmiddle,valueColumn alignmiddle,valueColumn alignmiddle,commandColumn alignmiddle">
+				<h:column>
+					<f:facet name="header">
+						<h:outputText value="Registered At" />
+					</f:facet>
+					<h:outputText
+						value="#{myWebAuthnRegMBean.getCreationDate(credentialId)}" />
+				</h:column>
+				<h:column>
+					<f:facet name="header">
+						<h:outputText value="Last Login At" />
+					</f:facet>
+					<h:outputText
+						value="#{myWebAuthnRegMBean.getAssertionDate(credentialId)}" />
+				</h:column>
+				<!-- 
+				<h:column>
+					<f:facet name="header">
+						<h:outputText value="SignatureCounter" />
+					</f:facet>
+					<h:outputText
+						value="#{myWebAuthnRegMBean.getSignatureCount(credentialId)}" />
+				</h:column>
+				 -->
+				<h:column>
+					<f:facet name="header">
+						<h:outputText value="Certificate Fingerprint" />
+					</f:facet>
+					<h:outputLink
+						onclick="#{myWebAuthnRegMBean.getViewCertlink(credentialId)}" >
+						<h:outputText value="#{myWebAuthnRegMBean.getCertFingerPrint(credentialId)}" />
+					</h:outputLink>
+				</h:column>
+				<h:column>
+					<f:facet name="header">
+						<h:outputText value="Expires [days]" />
+					</f:facet>
+					<h:outputText
+						value="#{myWebAuthnRegMBean.getCertExpiryDate(credentialId)}" />
+				</h:column>
+				<h:column>
+					<f:facet name="header">
+						<h:outputText value="#{web.text.ACTION}" />
+					</f:facet>
+					<h:commandButton
+						action="#{myWebAuthnRegMBean.actionDeleteCredentialStart(credentialId)}"
+						value="#{web.text.DELETE}"
+						rendered="#{myWebAuthnRegMBean.renderDeleteButton(credentialId)}">
+						<f:ajax execute="@this" render=":modalBlockContainer" />
+					</h:commandButton>
+				</h:column>
+
+			</h:dataTable>
+		</h:form>
+	</ui:define>
+        <ui:remove><!-- Template will render this when element ":modalBlockContainer" is rendered and "renderModal" param is true. --></ui:remove>
+        <ui:param name="renderModal" value="#{myWebAuthnRegMBean.isDeleteStarted()}"/>
+        <ui:define name="modal">
+            <h:form id="modal">
+			<h:panelGroup id="delete" rendered="#{myWebAuthnRegMBean.isDeleteStarted()}">
+                    <h2><h:outputText value="Delete WebAuthn Credential"/></h2>
+                    <p>Please confirm the WebAuthn credential with the following details will be deleted. This will also revoke the associated certificate, and remove any access memberships based upon the serial number of this certificate.</p>
+                    <h:panelGrid columns="2">
+                        <h:outputLabel value="Issued at:"/>
+                        <h:outputText value="#{myWebAuthnRegMBean.getCredentialRowSelectedIssuedAt()}"/>
+                        <h:outputLabel value="Expires in:"/>
+                        <h:outputText value="#{myWebAuthnRegMBean.getCredentialRowSelectedExpiresIn()}"/>
+                        <h:outputLabel value="Last used:"/>
+                        <h:outputText value="#{myWebAuthnRegMBean.getCredentialRowSelectedLastUsed()}"/>
+                        <h:outputLabel value="Cert Fingerprint:"/>
+                        <h:outputText value="#{myWebAuthnRegMBean.getCredentialRowSelectedCertFingerprint()}"/>
+                    </h:panelGrid>
+                    <h:panelGroup styleClass="alignright fullwidth" layout="block">
+                        <h:commandButton value="#{web.text.CANCEL}" action="#{myWebAuthnRegMBean.actionDeleteCredentialReset}">
+                            <f:ajax execute="@this" render=":modalBlockContainer"/>
+                        </h:commandButton>
+                        <h:commandButton value="#{web.text.DELETE}" action="#{myWebAuthnRegMBean.actionDeleteCredentialConfirm}">
+                            <f:ajax execute="@form" render="@all"/>
+                        </h:commandButton>
+                    </h:panelGroup>
+                </h:panelGroup>
+
+            </h:form>
+        </ui:define>
+
+</ui:composition>
+</html>

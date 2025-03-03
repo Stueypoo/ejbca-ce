@@ -36,6 +36,11 @@ import org.ejbca.core.model.era.RaMasterApiProxyBeanLocal;
 import org.ejbca.util.HttpTools;
 
 import com.keyfactor.util.CertTools;
+import org.cesecore.authentication.tokens.AlwaysAllowLocalAuthenticationToken;
+import org.cesecore.authentication.tokens.OAuth2AuthenticationToken;
+import org.cesecore.authentication.tokens.OAuth2Principal;
+import org.cesecore.authentication.tokens.UsernamePrincipal;
+
 
 /**
  * Web session authentication helper.
@@ -73,7 +78,8 @@ public class RaAuthenticationHelper implements Serializable {
             }
             // Set the current TLS session 
             authenticationTokenTlsSessionId = currentTlsSessionId;
-            final X509Certificate x509Certificate = getClientX509Certificate(httpServletRequest);
+            // Stu: Remove FINAL from below...
+            X509Certificate x509Certificate = getClientX509Certificate(httpServletRequest);
             final String oauthBearerToken = getBearerToken(httpServletRequest);
             final String oauthIdToken = getOauthIdToken(httpServletRequest);
             if (x509Certificate == null && x509AuthenticationTokenFingerprint != null) {
@@ -82,36 +88,38 @@ public class RaAuthenticationHelper implements Serializable {
                 authenticationToken = null;
                 x509AuthenticationTokenFingerprint = null;
             }
-            if (x509Certificate != null) {
-                final String fingerprint = CertTools.getFingerprintAsString(x509Certificate);
-                if (log.isTraceEnabled()) {
-                    log.trace("currentRequestFingerprint: "+fingerprint+", x509AuthenticationTokenFingerprint: "+x509AuthenticationTokenFingerprint);
-                }
-                if (x509AuthenticationTokenFingerprint != null && !StringUtils.equals(fingerprint, x509AuthenticationTokenFingerprint)) {
-                    log.warn("Suspected session hijacking attempt from " + httpServletRequest.getRemoteAddr() +
-                            ". RA client presented a different TLS certificate in the same HTTP session." +
-                            " new certificate had subject '" + CertTools.getSubjectDN(x509Certificate) + "'.");
-                    authenticationToken = null;
-                    x509AuthenticationTokenFingerprint = null;
-                }
-                if (log.isDebugEnabled()) {
-                    log.debug("RA client presented client TLS certificate with subject DN '" + CertTools.getSubjectDN(x509Certificate) + "'.");
-                }
-                // No need to perform re-authentication if the client certificate was the same
-                if (authenticationToken == null || !authenticationToken.matchTokenType(X509CertificateAuthenticationTokenMetaData.TOKEN_TYPE)) {
-                    authenticationToken = webAuthenticationProviderSession.authenticateUsingClientCertificate(x509Certificate);
-                }
-                if (!isAuthenticationTokenAccepted()) {
-                    authenticationToken = null;
-                    log.info("Authentication failed using certificate with fingerprint " + fingerprint + " reason: user has no access");
-                }
-                x509AuthenticationTokenFingerprint = authenticationToken == null ? null : fingerprint;
-            }
+            // Stu: 17APR24
+            // Moving OAuth checking to be first before certificate checking. This is to support 'psuedo' certificate authentication.
+            oauth_if:
             if (oauthBearerToken != null && (authenticationToken == null ||
-             authenticationToken.matchTokenType(PublicAccessAuthenticationTokenMetaData.TOKEN_TYPE))) {
+                authenticationToken.matchTokenType(PublicAccessAuthenticationTokenMetaData.TOKEN_TYPE))) {
                 final OAuthConfiguration oauthConfiguration = raMasterApi.getGlobalConfiguration(OAuthConfiguration.class);
                 try {
                     authenticationToken = webAuthenticationProviderSession.authenticateUsingOAuthBearerToken(oauthConfiguration, oauthBearerToken, oauthIdToken);
+                    // Stu: 17APR24
+                    // If the OAuth authentication provides a certificate, then revert to certificate authentication
+                    final OAuth2AuthenticationToken oauth2Admin = (OAuth2AuthenticationToken) authenticationToken;
+                    final OAuth2Principal principal = oauth2Admin.getClaims();
+
+                    if ( principal.getSubject().startsWith("#Certificate=") ) {
+                        // A certificate fingerprint was given by the internal WebAuthn Login provider
+                        // Extract the certificate, so we can then let the Certificate Authentication handle it.
+                        final String sCertFingerPrint = principal.getSubject().substring(13);
+                        // Lookup the actual certificate
+                        org.cesecore.certificates.certificate.CertificateDataWrapper cdw = raMasterApi.searchForCertificate(
+                                new AlwaysAllowLocalAuthenticationToken(new UsernamePrincipal("Certificate lookup for OAuth")), 
+                                sCertFingerPrint);
+                        // Set the certificate for Certificate Authentication
+                        x509Certificate = (X509Certificate) cdw.getCertificate();
+                        if ( x509Certificate != null) {
+                            // Certificate found, so lets do a psuedo certificate authentication
+                            // Clear the current OAuth 'authenticationToken'
+                            authenticationToken=null;
+                            log.info("Switching to 'Psuedo' certificate authentication"); 
+                            break oauth_if;
+                        }
+                    }
+                    
                 } catch (TokenExpiredException e) {
                     String refreshToken = getRefreshToken(httpServletRequest);
                     if (refreshToken != null) {
@@ -137,6 +145,32 @@ public class RaAuthenticationHelper implements Serializable {
                 if (authenticationToken == null) {
                     log.warn("Authentication failed using OAuth Bearer Token");
                 }
+            }
+                
+            if (x509Certificate != null) {
+                final String fingerprint = CertTools.getFingerprintAsString(x509Certificate);
+                if (log.isTraceEnabled()) {
+                    log.trace("currentRequestFingerprint: "+fingerprint+", x509AuthenticationTokenFingerprint: "+x509AuthenticationTokenFingerprint);
+                }
+                if (x509AuthenticationTokenFingerprint != null && !StringUtils.equals(fingerprint, x509AuthenticationTokenFingerprint)) {
+                    log.warn("Suspected session hijacking attempt from " + httpServletRequest.getRemoteAddr() +
+                            ". RA client presented a different TLS certificate in the same HTTP session." +
+                            " new certificate had subject '" + CertTools.getSubjectDN(x509Certificate) + "'.");
+                    authenticationToken = null;
+                    x509AuthenticationTokenFingerprint = null;
+                }
+                if (log.isDebugEnabled()) {
+                    log.debug("RA client presented client TLS certificate with subject DN '" + CertTools.getSubjectDN(x509Certificate) + "'.");
+                }
+                // No need to perform re-authentication if the client certificate was the same
+                if (authenticationToken == null || !authenticationToken.matchTokenType(X509CertificateAuthenticationTokenMetaData.TOKEN_TYPE)) {
+                    authenticationToken = webAuthenticationProviderSession.authenticateUsingClientCertificate(x509Certificate);
+                }
+                if (!isAuthenticationTokenAccepted()) {
+                    authenticationToken = null;
+                    log.info("Authentication failed using certificate with fingerprint " + fingerprint + " reason: user has no access");
+                }
+                x509AuthenticationTokenFingerprint = authenticationToken == null ? null : fingerprint;
             }
             if (authenticationToken == null) {
                 authenticationToken = webAuthenticationProviderSession.authenticateUsingNothing(httpServletRequest.getRemoteAddr(), httpServletRequest.isSecure());

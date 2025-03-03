@@ -49,6 +49,12 @@
 		<path location="${mod.statedump-common.lib}"/>
 		<path location="${mod.acme-common.jar}"/>
 		<path refid="lib.cryptotokens.classpath"/>
+
+		<!-- Stu: Mods for WebAuthn-->
+		<path location="${ejbca.home}/lib/ext/webauthn/webauthn-server-core-2.5.0.jar"/>
+		<path location="${ejbca.home}/lib/ext/webauthn/jackson-core-2.16.1.jar"/>
+		<path location="${ejbca.home}/lib/ext/webauthn/cbor-4.5.3.jar"/>
+		<path location="${ejbca.home}/lib/ext/webauthn/cose-java-1.1.0.jar"/>
 	</path>
 	
     <path id="test.classpath">
@@ -73,6 +79,19 @@
         	<zipfileset prefix="WEB-INF/lib" dir="${ejbca.home}/lib" includes="csrfguard-extension-session-4.3.0-jakarta.jar"/>
         	<zipfileset prefix="WEB-INF/lib" dir="${ejbca.home}/lib" includes="csrfguard-jsp-tags-4.3.0-jakarta.jar"/>
         	<zipfileset prefix="WEB-INF/lib" dir="${ejbca.home}/lib/primefaces" includes="primefaces-*.jar"/>
+            <zipfileset prefix="WEB-INF/lib" dir="${ejbca.home}/lib/ext/webauthn" includes="webauthn-server-core-2.5.0.jar"/>
+        	<zipfileset prefix="WEB-INF/lib" dir="${ejbca.home}/lib/ext/webauthn" includes="yubico-util-2.5.0.jar"/>
+        	<zipfileset prefix="WEB-INF/lib" dir="${ejbca.home}/lib/ext/webauthn" includes="cbor-4.5.3.jar"/>
+        	<zipfileset prefix="WEB-INF/lib" dir="${ejbca.home}/lib/ext/webauthn" includes="jackson-dataformat-cbor-2.16.1.jar"/>
+        	<zipfileset prefix="WEB-INF/lib" dir="${ejbca.home}/lib/ext/webauthn" includes="jackson-core-2.16.1.jar"/>
+        	<zipfileset prefix="WEB-INF/lib" dir="${ejbca.home}/lib/ext/webauthn" includes="jackson-databind-2.16.1.jar"/>
+        	<zipfileset prefix="WEB-INF/lib" dir="${ejbca.home}/lib/ext/webauthn" includes="jackson-dataformat-yaml-2.16.1.jar"/>
+        	<zipfileset prefix="WEB-INF/lib" dir="${ejbca.home}/lib/ext/webauthn" includes="jackson-datatype-jdk8-2.16.1.jar"/>
+        	<zipfileset prefix="WEB-INF/lib" dir="${ejbca.home}/lib/ext/webauthn" includes="jackson-datatype-jsr310-2.16.1.jar"/>
+        	<zipfileset prefix="WEB-INF/lib" dir="${ejbca.home}/lib/ext/webauthn" includes="jackson-annotations-2.16.1.jar"/>
+        	<zipfileset prefix="WEB-INF/lib" dir="${ejbca.home}/lib/ext/webauthn" includes="numbers-1.8.2.jar"/>
+        	<zipfileset prefix="WEB-INF/lib" dir="${ejbca.home}/lib/ext/webauthn" includes="cose-java-1.1.0.jar"/>
+        	
         	<fileset dir="${admin-gui.resources.dir}" excludes="languages/*"/>
         </war>
     </target>
