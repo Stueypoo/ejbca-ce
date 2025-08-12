@@ -87,6 +87,8 @@ public class NASHLdapPublisherUnitTest {
     // CP OID: 1.2.36.174030967.1.22.1.1
     private static String certTestABC_4 = "MIIH7jCCBdagAwIBAgIGXHKysnuGMA0GCSqGSIb3DQEBCwUAMHwxRzBFBgNVBAMMPlRFU1QgTWVkaWNhcmUgQXVzdHJhbGlhIE9yZ2FuaXNhdGlvbiBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eSAyMRYwFAYDVQQLDA1IdW1hbnNlcnZpY2VzMQwwCgYDVQQKDANHT1YxCzAJBgNVBAYTAkFVMB4XDTI1MDgwNzAwNTUzMFoXDTI3MDgwNzAwNTUyOVowgdExEjAQBgoJkiaJk/IsZAEZFgJhdTETMBEGCgmSJomT8ixkARkWA25ldDEgMB4GCgmSJomT8ixkARkWEGVsZWN0cm9uaWNoZWFsdGgxEjAQBgoJkiaJk/IsZAEZFgJpZDEgMB4GCgmSJomT8ixkARkWEDgwMDM2MjU4MzM0MDAwMDIxEDAOBgNVBAoMB1Rlc3RBQkMxPDA6BgNVBAMMM2dlbmVyYWwuODAwMzYyNTgzMzQwMDAwMi5pZC5lbGVjdHJvbmljaGVhbHRoLm5ldC5hdTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAJzTgRGe1uH49pQsOazB1nba5TWP4xphMXiUv7zcf8zWs1pOKza5mNXd+NBCJgegrh8UAdX+TISrs7ynS+zYvmfihJpRCrI6ZWnzpFjsIYmNS+W5FOdfk4HYEzCPy313yWkWc6Irj7UX8EqNcvlPy0ctKFEo0S6+0SLHgepTv1RfIOU0v7++0AjYDxJASBPX7O53UcrjTlrqlvZhu3sxZcDUP8oK88vrCkQk4lPnwxPWVSARbI/tZqAwC8JtmUGVvUSFgdXiB3zuj+K8QpPHrmAjTy/KN7MNIowLsWhLrc4z2iq2UBYK6weXFuz/mB2foreW5+boQlX1OBUtuig1408CAwEAAaOCAx4wggMaMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAUPv0OWT+Tb16//Y6MIStdpKWkZxAwUwYIKwYBBQUHAQEERzBFMEMGCCsGAQUFBzABhjdodHRwOi8vb2NzcC5jZXJ0aWZpY2F0ZXMtYXVzdHJhbGlhLmNvbS5hdS90ZXN0bW9jYTIucGt4MIIBFwYDVR0gBIIBDjCCAQowggEGBgoqJNL+gHcBFgEBMIH3MCcGCCsGAQUFBwIBFhtodHRwOi8vaHVtYW5zZXJ2aWNlcy5nb3YuYXUwgcsGCCsGAQUFBwICMIG+DIG7Q2VydGlmaWNhdGVzIGlzc3VlZCB1bmRlciB0aGlzIENQIG11c3Qgb25seSBiZSByZWxpZWQgb24gYnkgZW50aXRpZXMgd2l0aGluIHRoZSBDb21tdW5pdHkgb2YgSW50ZXJlc3QsIHVubGVzcyBvdGhlcndpc2UgYWdyZWVkLCBhbmQgbm90IGZvciBwdXJwb3NlcyBvdGhlciB0aGFuIHRob3NlIHBlcm1pdHRlZCBieSB0aGlzIENQLjCCAS0GA1UdHwSCASQwggEgMIIBHKCCARigggEUhoIBEGh0dHA6Ly93d3cuY2VydGlmaWNhdGVzLWF1c3RyYWxpYS5jb20uYXUvY2dpLWJpbi9kb3dubG9hZC5wbD9ETj1jbiUzRFRFU1QlMjBNZWRpY2FyZSUyMEF1c3RyYWxpYSUyME9yZ2FuaXNhdGlvbiUyMENlcnRpZmljYXRpb24lMjBBdXRob3JpdHklMkNvdSUzREh1bWFuc2VydmljZXMlMkNvJTNER09WJTJDYyUzREFVJmRvd25sb2FkVHlwZT1DUkwmZmlsZW5hbWU9VEVTVCUyME1lZGljYXJlJTIwQXVzdHJhbGlhJTIwT3JnYW5pc2F0aW9uJTIwQ0EuY3JsJmhlYWx0aERpcj10cnVlMB0GA1UdDgQWBBR4a448Kr72ASGbzKJuZEDOzjlxaDAOBgNVHQ8BAf8EBAMCBLAwGQYJKiSjkJUXAc4ZBAwWCjk4NzY1NDMyMTAwDQYJKoZIhvcNAQELBQADggIBALMa3YU9CWsfezWWvQAh0a8jvtjhvL2XTZsoMgJRXLeWUUlu6zoC2Vf7g9hLob1FJOmJB/DuyV1C40RNN8p04B6a8KA/ZYXKd+xFqoDZte9FJNo1od9BkoTGkhzCfAcWRJ4pb8NmVCboDJFM/YjQpk5D83KeLN19S4wP9LgdLLDHEHfeapXMIeF6UWeAsC7xda2x0BTtSjnemKqu4HxPSr8Ioi6mRB2guZF9BM7c6ajO3WVJREdLngB67vvA/C+9T3ARSBZUiD53zvl2MhhZlISgKEhcz5uuDL7mo4L3DHj3feEv0VOVADyrmRHtqkaveMjcyNmE++l97323droPeJroO7cFVP37MoD0gEBR9zvZKvz1zC/RfwrHec3GGNaju95H0VOpsRD8G0DOT8nb9vbhzw/5uk6dty45qH9l8S5fYIbNTGj4bJ92NA5IjywSgoGaxb54YvPU0gmNhk6v8PN8/9fqus+J9CbrzbVxg7pri7gTfHijpm+lHD2GYF/jAai5fAsM8B0JyfUTWVtxE39Gp8V/iMXh2M1OzCFPzsmVLPVQNhDI4uWpgyB9JRJ5r1Z1Wi10wDcdyxQhc9JZHPsgW6CIDGGq7Rq/PpDKx7z38oQreh51tem0QqBgJgB37iAh40z62KjU9fp1sjVXR9klEwO0UfXMxoY53CIg0r6u";
 
+    private static String certTestRCA = "MIIEujCCA6KgAwIBAgIBCjANBgkqhkiG9w0BAQsFADByMQswCQYDVQQGEwJBVTEMMAoGA1UEChMDR09WMRYwFAYDVQQLEw1IdW1hbnNlcnZpY2VzMT0wOwYDVQQDEzRURVNUIE1lZGljYXJlIEF1c3RyYWxpYSBSb290IENlcnRpZmljYXRpb24gQXV0aG9yaXR5MB4XDTI1MDIxOTIzNDA1MVoXDTQ1MDIxOTIzNDA1MVowcjELMAkGA1UEBhMCQVUxDDAKBgNVBAoTA0dPVjEWMBQGA1UECxMNSHVtYW5zZXJ2aWNlczE9MDsGA1UEAxM0VEVTVCBNZWRpY2FyZSBBdXN0cmFsaWEgUm9vdCBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANB/q/AVqubUAyv0/NSra8D1RYdXWriwdcyzIpDxNKhHZ7t7cuyaJHpnHc9YwImrIX9qlRbnQwqHeI178qIClWeNFn8idn0CFsqtRF69m+QTNBe7IwkueZVLI4YF6EU2mUDF/XAX162jwoOvGS1/iQm/vLTarJJZ7y3UMBpXPbqGgqKGM2Fw5jSgrQvN5/hin5qv0hNUYnvGeUjaJqYLWRrsaDtZ25xsSO9TWU6WbPZ6o+2+SZXMi+PN4NrDnp0t+FLP847dLLo4X4U+CwyHpw50wKzBS2LGclG5xZBN30ZAnbSUlkC2uC3YvLoapsh+9CpbbSlW58+CtrdTPH11reMCAwEAAaOCAVkwggFVMA8GA1UdEwEB/wQFMAMBAf8wgfQGA1UdIASB7DCB6TCB5gYKKiTS/oB3AQICATCB1zCBpwYIKwYBBQUHAgIwgZoagZdDZXJ0aWZpY2F0ZXMgdW5kZXIgdGhpcyBwb2xpY3kgYXJlIGlzc3VlZCBieSB0aGUgVEVTVCBNZWRpY2FyZSBBdXN0cmFsaWEgUm9vdCBDQSB0byBpdHNlbGYgb3IgdG8gQ0FzIHN1Ym9yZGluYXRlIHRvIHRoZSBURVNUIE1lZGljYXJlIEF1c3RyYWxpYSBSb290IENBMCsGCCsGAQUFBwIBFh9odHRwOi8vd3d3Lmh1bWFuc2VydmljZXMuZ292LmF1MAsGA1UdDwQEAwIBBjAfBgNVHSMEGDAWgBT+plzlGprY+KDPyM6YJBCwp91YFTAdBgNVHQ4EFgQU/qZc5Rqa2Pigz8jOmCQQsKfdWBUwDQYJKoZIhvcNAQELBQADggEBAA8cRT3Q8/xcUvZa8pBMx0Drsx9QyEWav96DCe//0nurqJAiF+1ZOSfJPEJeBS0ZUXKv+iG2zOzVmPk4SOSdw9r4pbJJn/STEUZ8fOx1GnTaQAqnH7n/o/dPu4thLsjIvzFdunS+sg4yxDGzlJc4ZEhGLAITOPnavFgJsCcoyKu25dGaU5gbeoo/b6jB6ltvdCdiKcB0IqTXaDgU+3a2792ol2TQpqlWA2IzxoKY7EyMWmzst/w64TmhUyynjEq9SE8tVLVjon02REHuGKqYbupZkZ3qC11WREOY5Zby+FSJKccKTqViXU4oIahwmwf7t39k6vxrwnxSW/M/wcm/0q4=";
+
     
     @BeforeClass
     static public void setup() {
@@ -105,29 +107,34 @@ public class NASHLdapPublisherUnitTest {
         userDN = publ.constructLDAPDN( userDN, null);
         deleteNode( userDN,true);
 
+        // Delete test CA nodes
+        deleteNode( "cn=TEST Medicare Australia Root Certification Authority,ou=Humanservices,o=GOV", false);  // baseDN is c=AU
+        deleteNode( "ou=Humanservices,o=GOV", true);  // baseDN is c=AU
+
     }
  
+    
     @Test
-    public void A01_publishCAcertIsIgnored() {
+    public void A01_publishRCAcert() {
         // Tests:
-        //   1. A CA cert is not published by the Publisher (it is for EE only).
-        //   2. The response ik OK and no exception. This lets the cert get cleared from the publisher queue.
+        //   1. A CA cert is published  with correct objectClass.
+        //   2. No NASH attributes are included
+        //   3. The response is OK and no exception. This lets the cert get cleared from the publisher queue.
         //
-        NASHLdapPublisher publ = new NASHLdapPublisher();
+        BasicLdapPublisher publ = new BasicLdapPublisher();
         Properties pros = new Properties();
         pros.setProperty( publ.HOSTNAMES, HOSTNAMES);
         pros.setProperty( publ.PORT, PORT);
         pros.setProperty( publ.LOGINDN, LOGINDN);
         pros.setProperty( publ.LOGINPASSWORD, LOGINPASSWORD);
-        pros.setProperty( publ.BASEDN, BASEDN);
+        pros.setProperty( publ.BASEDN, BASEDN); 
 
-        pros.setProperty( publ.VALIDCPOIDS, VALIDCPOIDS);
         pros.setProperty( publ.CONNECTIONSECURITY, CONNECTIONSECURITY);
         publ.init( pros);
 
         
         Certificate cert=null;
-        byte[] certInBytes = Base64.decode(certTestABC_3); // Will use the User cert even though it is a CA test. We don't actually need the CA cert.
+        byte[] certInBytes = Base64.decode(certTestABC_3);  // We can use a user cert, even if publishing a CA entry.
         try {
             cert = CertTools.getCertfromByteArray( certInBytes);
         } catch (CertificateParsingException e) {
@@ -137,36 +144,46 @@ public class NASHLdapPublisherUnitTest {
         // Construct the LDAP DN
         String userDN = publ.constructLDAPDN(CertTools.getSubjectDN(cert), null);
         
-        // Ensure the node does not exist, so we can check if it does get created by a code error.
+        // Ensure the node does not exist, so we can check if it does get created.
         deleteNode( userDN, false);
         
         LDAPConnection lc = null;
         try {
             // ROOTCA
             boolean res = publ.storeCertificate(null,  cert, "N/A", null, null, null, CertificateConstants.CERT_ACTIVE, CertificateConstants.CERTTYPE_ROOTCA, 0, 0, null, 0, 0, null );
-            assertTrue("Expecting a true result even though not publishing CA cert", res);
-            // SUBCA
-            res = publ.storeCertificate(null,  cert, "N/A", null, null, null, CertificateConstants.CERT_ACTIVE, CertificateConstants.CERTTYPE_SUBCA, 0, 0, null, 0, 0, null );
-            assertTrue("Expecting a true result even though not publishing CA cert", res);
+            assertTrue("Expecting a true result.", res);
         } catch (PublisherException e) {
             assertTrue("Unexpected Publisher exception: "+e,false);
         }
         try {
-            // Check nothing was created
+            // Check CA node was created
             lc = publ.createLdapConnection();
             lc.connect( HOSTNAMES, Integer.parseInt(PORT));
             lc.bind( LDAPConnection.LDAP_V3, publ.getLoginDN(), publ.getLoginPassword().getBytes(StandardCharsets.UTF_8), publ.ldapBindConstraints);
             LDAPEntry le = lc.read( userDN,  publ.ldapSearchConstraints);
-            assertTrue("LDAP entry for the CA should not exist.",false);
+            assertTrue("LDAP entry for the CA should exist.",le!=null);
+            
+            // Check the cert was published correctly. Can get the cACertificate, then remove cert. The size should change.
+            LDAPAttribute la = le.getAttribute( "cACertificate;binary");
+            assertTrue("The CA Certificate attribute should exist", la !=null);
+            int totalCerts = la.size();
+            la.removeValue(certInBytes);
+            assertTrue("Cert was not in LDAP entry.", la.size() < totalCerts);
+            
+            // Check employeeType attributes doesn't exist
+            la = le.getAttribute( "employeeType");
+            assertTrue("The employeeType attribute should not exist", la==null);
+            // Check employeeNumber attributes doesn't exist
+            la = le.getAttribute( "employeeNumber");
+            assertTrue("The employeeNumber attribute should not exist", la==null);
+            
           
             // Main things checked at this point.
             // Leave LDAP entry for next test
             
         } catch ( LDAPException e) {
             // Expecting a no such object error
-            if (e.getResultCode() != LDAPException.NO_SUCH_OBJECT) {
-                assertTrue("Unexpected LDAP exception: "+e,false);
-            }
+            assertTrue("Unexpected LDAP exception: "+e,false);
         } finally {
             if (lc != null) {
                 try {
@@ -176,8 +193,8 @@ public class NASHLdapPublisherUnitTest {
                 }
             }
         }
-        
-    }
+    }   
+
 
     
     @Test
@@ -195,7 +212,7 @@ public class NASHLdapPublisherUnitTest {
         pros.setProperty( publ.LOGINPASSWORD, LOGINPASSWORD);
         pros.setProperty( publ.BASEDN, BASEDN);
 
-        pros.setProperty( publ.VALIDCPOIDS, VALIDCPOIDS);
+//        pros.setProperty( publ.VALIDCPOIDS, VALIDCPOIDS);
         pros.setProperty( publ.CONNECTIONSECURITY, CONNECTIONSECURITY);
         publ.init( pros);
 
@@ -213,6 +230,7 @@ public class NASHLdapPublisherUnitTest {
         
         // Ensure the node does not exist, and all parent nodes to ensure intermediaries are created by publisher.
         deleteNode( userDN, true);
+        deleteNode( DnComponents.getParentDN( userDN), true);
         
         try {
             publ.storeCertificate(null,  cert, "UnitTestNash1", null, null, null, CertificateConstants.CERT_ACTIVE, CertificateConstants.CERTTYPE_ENDENTITY, 0, 0, null, 0, 0, null );
@@ -220,7 +238,7 @@ public class NASHLdapPublisherUnitTest {
             assertTrue("Unexpected Publisher exception: "+e,false);
         }
 
-        // Check the LDAP entrywas created
+        // Check the LDAP entry was created
         LDAPConnection lc = null;
         try {
            
@@ -283,79 +301,9 @@ public class NASHLdapPublisherUnitTest {
     }
 
     
+     
     @Test
-    public void B02_republishNashCert() {
-        // Tests:
-        //   1. A re-publish of an existing user with same certificate is fine.
-        //   2. No errors or exceptions so the cert gets cleared from the publisher queue.
-        //   
-        
-        NASHLdapPublisher publ = new NASHLdapPublisher();
-        Properties pros = new Properties();
-        pros.setProperty( publ.HOSTNAMES, HOSTNAMES);
-        pros.setProperty( publ.PORT, PORT);
-        pros.setProperty( publ.LOGINDN, LOGINDN);
-        pros.setProperty( publ.LOGINPASSWORD, LOGINPASSWORD);
-        pros.setProperty( publ.BASEDN, BASEDN);
-
-        pros.setProperty( publ.VALIDCPOIDS, VALIDCPOIDS);
-        pros.setProperty( publ.CONNECTIONSECURITY, CONNECTIONSECURITY);
-        publ.init( pros);
-
-        
-        Certificate cert=null;
-        byte[] certInBytes = Base64.decode(certTestABC_3);
-        try {
-            cert = CertTools.getCertfromByteArray( certInBytes);
-        } catch (CertificateParsingException e) {
-            assertEquals("Certificate encoding issue: "+e.getMessage(),false);
-        }
-        
-        // Construct the LDAP DN
-        String userDN = publ.constructLDAPDN(CertTools.getSubjectDN(cert), null);
-        
-       
-        try {
-            publ.storeCertificate(null,  cert, "UnitTestNash1", null, null, null, CertificateConstants.CERT_ACTIVE, CertificateConstants.CERTTYPE_ENDENTITY, 0, 0, null, 0, 0, null );
-        } catch (PublisherException e) {
-            assertTrue("Unexpected Publisher exception: "+e,false);
-        }
-
-        // Check the LDAP entry not impacted
-        LDAPConnection lc = null;
-        try {
-           
-            lc = publ.createLdapConnection();
-            lc.connect( HOSTNAMES, Integer.parseInt(PORT));
-            lc.bind( LDAPConnection.LDAP_V3, publ.getLoginDN(), publ.getLoginPassword().getBytes(StandardCharsets.UTF_8), publ.ldapBindConstraints);
-            LDAPEntry le = lc.read( userDN,  publ.ldapSearchConstraints);
-            assertTrue("LDAP entry for the user should exist.",le != null);
-            
-            // Check the cert was published correctly. Number of userCertificates should be 1.
-            LDAPAttribute la = le.getAttribute( "userCertificate;binary");
-            assertTrue("The userCertificate attribute should exist", la !=null);
-            assertTrue("LDAP entry should have one cert", la.size() ==1);
-            
-            // Main things checked at this point.
-            // Leave LDAP entry for next test
-            
-        } catch ( LDAPException e) {
-            assertTrue("Unexpected LDAP exception: "+e,false);
-        } finally {
-            if (lc != null) {
-                try {
-                    lc.disconnect();
-                } catch (LDAPException e) {
-                    //
-                }
-            }
-        }
-    }
-    
-    
-    
-    @Test
-    public void B03_publishNashNewCertWithChanges() {
+    public void B02_publishNashNewCertWithChanges() {
         // Tests:
         //   1. LDAP entry is updated, with extra cert.
         //   2. The new cert could have different RA Number and/or CP OID value. The attributes should be updated (employeeNumber, employeeType).
@@ -369,7 +317,7 @@ public class NASHLdapPublisherUnitTest {
         pros.setProperty( publ.LOGINPASSWORD, LOGINPASSWORD);
         pros.setProperty( publ.BASEDN, BASEDN);
 
-        pros.setProperty( publ.VALIDCPOIDS, VALIDCPOIDS);
+//        pros.setProperty( publ.VALIDCPOIDS, VALIDCPOIDS);
         pros.setProperty( publ.CONNECTIONSECURITY, CONNECTIONSECURITY);
         publ.init( pros);
 
@@ -457,7 +405,7 @@ public class NASHLdapPublisherUnitTest {
         pros.setProperty( publ.LOGINPASSWORD, LOGINPASSWORD);
         pros.setProperty( publ.BASEDN, BASEDN);
 
-        pros.setProperty( publ.VALIDCPOIDS, VALIDCPOIDS);
+ //       pros.setProperty( publ.VALIDCPOIDS, VALIDCPOIDS);
         pros.setProperty( publ.CONNECTIONSECURITY, CONNECTIONSECURITY);
         publ.init( pros);
 
@@ -516,80 +464,80 @@ public class NASHLdapPublisherUnitTest {
 
     
  
-    
-    @Test
-    public void B05_publishNashRevokeFirstCertAgain() {
-        // Tests:
-        //   1. LDAP entry is not affected as the certificate was previously removed
-        //   2. No errors/exceptions so that the cert gets cleared from the publisher queue.
-        //   
-        
-        NASHLdapPublisher publ = new NASHLdapPublisher();
-        Properties pros = new Properties();
-        pros.setProperty( publ.HOSTNAMES, HOSTNAMES);
-        pros.setProperty( publ.PORT, PORT);
-        pros.setProperty( publ.LOGINDN, LOGINDN);
-        pros.setProperty( publ.LOGINPASSWORD, LOGINPASSWORD);
-        pros.setProperty( publ.BASEDN, BASEDN);
-
-        pros.setProperty( publ.VALIDCPOIDS, VALIDCPOIDS);
-        pros.setProperty( publ.CONNECTIONSECURITY, CONNECTIONSECURITY);
-        publ.init( pros);
-
-        
-        Certificate cert=null;
-        byte[] certInBytes = Base64.decode(certTestABC_3);
-        try {
-            cert = CertTools.getCertfromByteArray( certInBytes);
-        } catch (CertificateParsingException e) {
-            assertEquals("Certificate encoding issue: "+e.getMessage(),false);
-        }
-        
-        // Construct the LDAP DN
-        String userDN = publ.constructLDAPDN(CertTools.getSubjectDN(cert), null);
-        
-       
-        try {
-            publ.storeCertificate(null,  cert, "UnitTestNash1", null, null, null, CertificateConstants.CERT_REVOKED, CertificateConstants.CERTTYPE_ENDENTITY, 0, 0, null, 0, 0, null );
-        } catch (PublisherException e) {
-            assertTrue("Unexpected Publisher exception: "+e,false);
-        }
-
-        // Check the LDAP entry was updated
-        LDAPConnection lc = null;
-        try {
-           
-            lc = publ.createLdapConnection();
-            lc.connect( HOSTNAMES, Integer.parseInt(PORT));
-            lc.bind( LDAPConnection.LDAP_V3, publ.getLoginDN(), publ.getLoginPassword().getBytes(StandardCharsets.UTF_8), publ.ldapBindConstraints);
-            LDAPEntry le = lc.read( userDN,  publ.ldapSearchConstraints);
-            assertTrue("LDAP entry for the user should exist.",le != null);
-            
-            // Check there are only one cert.
-            LDAPAttribute la = le.getAttribute( "userCertificate;binary");
-            assertTrue("The userCertificate attribute should exist", la !=null);
-            assertTrue("LDAP entry should have 1 entry.", la.size() ==1);
-            la.removeValue(certInBytes);
-            assertTrue("The revoked cert should not have been in LDAP entry.", la.size() ==1);
-            
-          
-            // Main things checked at this point.
-            // Leave LDAP entry for next test
-            
-        } catch ( LDAPException e) {
-            assertTrue("Unexpected LDAP exception: "+e,false);
-        } finally {
-            if (lc != null) {
-                try {
-                    lc.disconnect();
-                } catch (LDAPException e) {
-                    //
-                }
-            }
-        }
-    }
-
-
+//    
+//    @Test
+//    public void B05_publishNashRevokeFirstCertAgain() {
+//        // Tests:
+//        //   1. LDAP entry is not affected as the certificate was previously removed
+//        //   2. No errors/exceptions so that the cert gets cleared from the publisher queue.
+//        //   
+//        
+//        NASHLdapPublisher publ = new NASHLdapPublisher();
+//        Properties pros = new Properties();
+//        pros.setProperty( publ.HOSTNAMES, HOSTNAMES);
+//        pros.setProperty( publ.PORT, PORT);
+//        pros.setProperty( publ.LOGINDN, LOGINDN);
+//        pros.setProperty( publ.LOGINPASSWORD, LOGINPASSWORD);
+//        pros.setProperty( publ.BASEDN, BASEDN);
+//
+//        pros.setProperty( publ.VALIDCPOIDS, VALIDCPOIDS);
+//        pros.setProperty( publ.CONNECTIONSECURITY, CONNECTIONSECURITY);
+//        publ.init( pros);
+//
+//        
+//        Certificate cert=null;
+//        byte[] certInBytes = Base64.decode(certTestABC_3);
+//        try {
+//            cert = CertTools.getCertfromByteArray( certInBytes);
+//        } catch (CertificateParsingException e) {
+//            assertEquals("Certificate encoding issue: "+e.getMessage(),false);
+//        }
+//        
+//        // Construct the LDAP DN
+//        String userDN = publ.constructLDAPDN(CertTools.getSubjectDN(cert), null);
+//        
+//       
+//        try {
+//            publ.storeCertificate(null,  cert, "UnitTestNash1", null, null, null, CertificateConstants.CERT_REVOKED, CertificateConstants.CERTTYPE_ENDENTITY, 0, 0, null, 0, 0, null );
+//        } catch (PublisherException e) {
+//            assertTrue("Unexpected Publisher exception: "+e,false);
+//        }
+//
+//        // Check the LDAP entry was updated
+//        LDAPConnection lc = null;
+//        try {
+//           
+//            lc = publ.createLdapConnection();
+//            lc.connect( HOSTNAMES, Integer.parseInt(PORT));
+//            lc.bind( LDAPConnection.LDAP_V3, publ.getLoginDN(), publ.getLoginPassword().getBytes(StandardCharsets.UTF_8), publ.ldapBindConstraints);
+//            LDAPEntry le = lc.read( userDN,  publ.ldapSearchConstraints);
+//            assertTrue("LDAP entry for the user should exist.",le != null);
+//            
+//            // Check there are only one cert.
+//            LDAPAttribute la = le.getAttribute( "userCertificate;binary");
+//            assertTrue("The userCertificate attribute should exist", la !=null);
+//            assertTrue("LDAP entry should have 1 entry.", la.size() ==1);
+//            la.removeValue(certInBytes);
+//            assertTrue("The revoked cert should not have been in LDAP entry.", la.size() ==1);
+//            
+//          
+//            // Main things checked at this point.
+//            // Leave LDAP entry for next test
+//            
+//        } catch ( LDAPException e) {
+//            assertTrue("Unexpected LDAP exception: "+e,false);
+//        } finally {
+//            if (lc != null) {
+//                try {
+//                    lc.disconnect();
+//                } catch (LDAPException e) {
+//                    //
+//                }
+//            }
+//        }
+//    }
+//
+//
     
     @Test
     public void B06_publishNashRevokeRemainingCert() {
@@ -606,7 +554,7 @@ public class NASHLdapPublisherUnitTest {
         pros.setProperty( publ.LOGINPASSWORD, LOGINPASSWORD);
         pros.setProperty( publ.BASEDN, BASEDN);
 
-        pros.setProperty( publ.VALIDCPOIDS, VALIDCPOIDS);
+//        pros.setProperty( publ.VALIDCPOIDS, VALIDCPOIDS);
         pros.setProperty( publ.CONNECTIONSECURITY, CONNECTIONSECURITY);
         publ.init( pros);
 
@@ -661,234 +609,234 @@ public class NASHLdapPublisherUnitTest {
 
 
     
-    @Test
-    public void B07_publishNashRevokeButUserNotExist() {
-        // Tests:
-        //   1. LDAP entry is unchanged as User entry doesn't exist.
-        //   2. No exception raise.
-        //   
-        
-        NASHLdapPublisher publ = new NASHLdapPublisher();
-        Properties pros = new Properties();
-        pros.setProperty( publ.HOSTNAMES, HOSTNAMES);
-        pros.setProperty( publ.PORT, PORT);
-        pros.setProperty( publ.LOGINDN, LOGINDN);
-        pros.setProperty( publ.LOGINPASSWORD, LOGINPASSWORD);
-        pros.setProperty( publ.BASEDN, BASEDN);
-
-        pros.setProperty( publ.VALIDCPOIDS, VALIDCPOIDS);
-        pros.setProperty( publ.CONNECTIONSECURITY, CONNECTIONSECURITY);
-        publ.init( pros);
-
-        
-        Certificate cert=null;
-        byte[] certInBytes = Base64.decode(certTestABC_4);
-        try {
-            cert = CertTools.getCertfromByteArray( certInBytes);
-        } catch (CertificateParsingException e) {
-            assertEquals("Certificate encoding issue: "+e.getMessage(),false);
-        }
-        
-        // Construct the LDAP DN
-        String userDN = publ.constructLDAPDN(CertTools.getSubjectDN(cert), null);
-        
-       
-        try {
-            publ.storeCertificate(null,  cert, "UnitTestNash1", null, null, null, CertificateConstants.CERT_REVOKED, CertificateConstants.CERTTYPE_ENDENTITY, 0, 0, null, 0, 0, null );
-        } catch (PublisherException e) {
-            assertTrue("Unexpected Publisher exception: "+e,false);
-        }
-
-        // Check the LDAP entry was updated
-        LDAPConnection lc = null;
-        try {
-           
-            lc = publ.createLdapConnection();
-            lc.connect( HOSTNAMES, Integer.parseInt(PORT));
-            lc.bind( LDAPConnection.LDAP_V3, publ.getLoginDN(), publ.getLoginPassword().getBytes(StandardCharsets.UTF_8), publ.ldapBindConstraints);
-            LDAPEntry le = lc.read( userDN,  publ.ldapSearchConstraints);
-            assertTrue("LDAP entry for the user should not exist.",le == null);
-            
-          
-            // Main things checked at this point.
-            // Leave LDAP entry for next test
-            
-        } catch ( LDAPException e) {
-            // Expecting a no such object error
-            if(e.getResultCode() != LDAPException.NO_SUCH_OBJECT) {
-                assertTrue("Unexpected LDAP exception: "+e,false);
-            }
-        } finally {
-            if (lc != null) {
-                try {
-                    lc.disconnect();
-                } catch (LDAPException e) {
-                    //
-                }
-            }
-        }
-    }
-
-
-    
-    @Test
-    public void B08_publishNashRevokeButKeepUser() {
-        // Tests:
-        //   1. Use an option to prevent the deletion of a User when their one remaining cert is revoked.
-        //   
-        
-        NASHLdapPublisher publ = new NASHLdapPublisher();
-        Properties pros = new Properties();
-        pros.setProperty( publ.HOSTNAMES, HOSTNAMES);
-        pros.setProperty( publ.PORT, PORT);
-        pros.setProperty( publ.LOGINDN, LOGINDN);
-        pros.setProperty( publ.LOGINPASSWORD, LOGINPASSWORD);
-        pros.setProperty( publ.BASEDN, BASEDN);
-
-        pros.setProperty( publ.VALIDCPOIDS, VALIDCPOIDS);
-        pros.setProperty( publ.CONNECTIONSECURITY, CONNECTIONSECURITY);
-        publ.init( pros);
-
-        // Need this option turned off.
-        publ.setRemoveUsersWhenCertRevoked(false);
-        
-        Certificate cert=null;
-        byte[] certInBytes = Base64.decode(certTestABC_4);
-        try {
-            cert = CertTools.getCertfromByteArray( certInBytes);
-        } catch (CertificateParsingException e) {
-            assertEquals("Certificate encoding issue: "+e.getMessage(),false);
-        }
-        
-        // Construct the LDAP DN
-        String userDN = publ.constructLDAPDN(CertTools.getSubjectDN(cert), null);
-        
-        // Ensure the User doesn't exit
-        deleteNode( userDN, false);
-        
-       
-        try {
-            // Publish cert. We can assume this works because we have tested it earlier
-            publ.storeCertificate(null,  cert, "UnitTestNash1", null, null, null, CertificateConstants.CERT_ACTIVE, CertificateConstants.CERTTYPE_ENDENTITY, 0, 0, null, 0, 0, null );
-            // Revoke cert
-            publ.storeCertificate(null,  cert, "UnitTestNash1", null, null, null, CertificateConstants.CERT_REVOKED, CertificateConstants.CERTTYPE_ENDENTITY, 0, 0, null, 0, 0, null );
-        } catch (PublisherException e) {
-            assertTrue("Unexpected Publisher exception: "+e,false);
-        }
-
-        // Check the LDAP entry exists but has no certificates
-        LDAPConnection lc = null;
-        try {
-           
-            lc = publ.createLdapConnection();
-            lc.connect( HOSTNAMES, Integer.parseInt(PORT));
-            lc.bind( LDAPConnection.LDAP_V3, publ.getLoginDN(), publ.getLoginPassword().getBytes(StandardCharsets.UTF_8), publ.ldapBindConstraints);
-            LDAPEntry le = lc.read( userDN,  publ.ldapSearchConstraints);
-            assertTrue("LDAP entry for the user should  exist.",le != null);
- 
-            // Check there are only one cert.
-            LDAPAttribute la = le.getAttribute( "userCertificate;binary");
-            assertTrue("The userCertificate attribute should not exist", la ==null);
-
-          
-            // Main things checked at this point.
-            // Leave LDAP entry for next test
-            
-        } catch ( LDAPException e) {
-            // Expecting a no such object error
-            if(e.getResultCode() != LDAPException.NO_SUCH_OBJECT) {
-                assertTrue("Unexpected LDAP exception: "+e,false);
-            }
-        } finally {
-            if (lc != null) {
-                try {
-                    lc.disconnect();
-                } catch (LDAPException e) {
-                    //
-                }
-            }
-        }
-    }
-
+//    @Test
+//    public void B07_publishNashRevokeButUserNotExist() {
+//        // Tests:
+//        //   1. LDAP entry is unchanged as User entry doesn't exist.
+//        //   2. No exception raise.
+//        //   
+//        
+//        NASHLdapPublisher publ = new NASHLdapPublisher();
+//        Properties pros = new Properties();
+//        pros.setProperty( publ.HOSTNAMES, HOSTNAMES);
+//        pros.setProperty( publ.PORT, PORT);
+//        pros.setProperty( publ.LOGINDN, LOGINDN);
+//        pros.setProperty( publ.LOGINPASSWORD, LOGINPASSWORD);
+//        pros.setProperty( publ.BASEDN, BASEDN);
+//
+//        pros.setProperty( publ.VALIDCPOIDS, VALIDCPOIDS);
+//        pros.setProperty( publ.CONNECTIONSECURITY, CONNECTIONSECURITY);
+//        publ.init( pros);
+//
+//        
+//        Certificate cert=null;
+//        byte[] certInBytes = Base64.decode(certTestABC_4);
+//        try {
+//            cert = CertTools.getCertfromByteArray( certInBytes);
+//        } catch (CertificateParsingException e) {
+//            assertEquals("Certificate encoding issue: "+e.getMessage(),false);
+//        }
+//        
+//        // Construct the LDAP DN
+//        String userDN = publ.constructLDAPDN(CertTools.getSubjectDN(cert), null);
+//        
+//       
+//        try {
+//            publ.storeCertificate(null,  cert, "UnitTestNash1", null, null, null, CertificateConstants.CERT_REVOKED, CertificateConstants.CERTTYPE_ENDENTITY, 0, 0, null, 0, 0, null );
+//        } catch (PublisherException e) {
+//            assertTrue("Unexpected Publisher exception: "+e,false);
+//        }
+//
+//        // Check the LDAP entry was updated
+//        LDAPConnection lc = null;
+//        try {
+//           
+//            lc = publ.createLdapConnection();
+//            lc.connect( HOSTNAMES, Integer.parseInt(PORT));
+//            lc.bind( LDAPConnection.LDAP_V3, publ.getLoginDN(), publ.getLoginPassword().getBytes(StandardCharsets.UTF_8), publ.ldapBindConstraints);
+//            LDAPEntry le = lc.read( userDN,  publ.ldapSearchConstraints);
+//            assertTrue("LDAP entry for the user should not exist.",le == null);
+//            
+//          
+//            // Main things checked at this point.
+//            // Leave LDAP entry for next test
+//            
+//        } catch ( LDAPException e) {
+//            // Expecting a no such object error
+//            if(e.getResultCode() != LDAPException.NO_SUCH_OBJECT) {
+//                assertTrue("Unexpected LDAP exception: "+e,false);
+//            }
+//        } finally {
+//            if (lc != null) {
+//                try {
+//                    lc.disconnect();
+//                } catch (LDAPException e) {
+//                    //
+//                }
+//            }
+//        }
+//    }
+//
 
     
-    @Test
-    public void B9_InvalidCPOid() {
-        // Tests:
-        //   1. Certs are not published unless they have a valid CP OID.
-        //   2. No exceptions raised.
-        
-        NASHLdapPublisher publ = new NASHLdapPublisher();
-        Properties pros = new Properties();
-        pros.setProperty( publ.HOSTNAMES, HOSTNAMES);
-        pros.setProperty( publ.PORT, PORT);
-        pros.setProperty( publ.LOGINDN, LOGINDN);
-        pros.setProperty( publ.LOGINPASSWORD, LOGINPASSWORD);
-        pros.setProperty( publ.BASEDN, BASEDN);
-
-        // Policy OIDs here should not publish the test certs.
-        pros.setProperty( publ.VALIDCPOIDS, "1.3.36.174030967.1.20.1.1;1.2.36.174030967.1.22.1.2");
-        pros.setProperty( publ.CONNECTIONSECURITY, CONNECTIONSECURITY);
-        publ.init( pros);
-
-        // Try two different certs, neither should work.
-        Certificate cert3=null;
-        Certificate cert4=null;
-        byte[] certInBytes3= Base64.decode(certTestABC_3);
-        byte[] certInBytes4 = Base64.decode(certTestABC_4);
-        try {
-            cert3 = CertTools.getCertfromByteArray( certInBytes3);
-            cert4 = CertTools.getCertfromByteArray( certInBytes4);
-        } catch (CertificateParsingException e) {
-            assertEquals("Certificate encoding issue: "+e.getMessage(),false);
-        }
-        
-        // Construct the LDAP DN
-        String userDN = publ.constructLDAPDN(CertTools.getSubjectDN(cert4), null);
-        
-        // Ensure the User doesn't exit
-        deleteNode( userDN, false);
-        
-       
-        try {
-            // Try to publish cert.
-            publ.storeCertificate(null,  cert3, "UnitTestNash1", null, null, null, CertificateConstants.CERT_ACTIVE, CertificateConstants.CERTTYPE_ENDENTITY, 0, 0, null, 0, 0, null );
-            publ.storeCertificate(null,  cert4, "UnitTestNash1", null, null, null, CertificateConstants.CERT_ACTIVE, CertificateConstants.CERTTYPE_ENDENTITY, 0, 0, null, 0, 0, null );
-        } catch (PublisherException e) {
-            assertTrue("Unexpected Publisher exception: "+e,false);
-        }
-
-        // Check the LDAP entry should not exists 
-        LDAPConnection lc = null;
-        try {
-           
-            lc = publ.createLdapConnection();
-            lc.connect( HOSTNAMES, Integer.parseInt(PORT));
-            lc.bind( LDAPConnection.LDAP_V3, publ.getLoginDN(), publ.getLoginPassword().getBytes(StandardCharsets.UTF_8), publ.ldapBindConstraints);
-            LDAPEntry le = lc.read( userDN,  publ.ldapSearchConstraints);
-            assertTrue("LDAP entry for the user should not exist.",le == null);
- 
-          
-            // Main things checked at this point.
-            // Leave LDAP entry for next test
-            
-        } catch ( LDAPException e) {
-            // Expecting a no such object error
-            if(e.getResultCode() != LDAPException.NO_SUCH_OBJECT) {
-                assertTrue("Unexpected LDAP exception: "+e,false);
-            }
-        } finally {
-            if (lc != null) {
-                try {
-                    lc.disconnect();
-                } catch (LDAPException e) {
-                    //
-                }
-            }
-        }
-    }
-
-    
+//    @Test
+//    public void B08_publishNashRevokeButKeepUser() {
+//        // Tests:
+//        //   1. Use an option to prevent the deletion of a User when their one remaining cert is revoked.
+//        //   
+//        
+//        NASHLdapPublisher publ = new NASHLdapPublisher();
+//        Properties pros = new Properties();
+//        pros.setProperty( publ.HOSTNAMES, HOSTNAMES);
+//        pros.setProperty( publ.PORT, PORT);
+//        pros.setProperty( publ.LOGINDN, LOGINDN);
+//        pros.setProperty( publ.LOGINPASSWORD, LOGINPASSWORD);
+//        pros.setProperty( publ.BASEDN, BASEDN);
+//
+//        pros.setProperty( publ.VALIDCPOIDS, VALIDCPOIDS);
+//        pros.setProperty( publ.CONNECTIONSECURITY, CONNECTIONSECURITY);
+//        publ.init( pros);
+//
+//        // Need this option turned off.
+//        publ.setRemoveUsersWhenCertRevoked(false);
+//        
+//        Certificate cert=null;
+//        byte[] certInBytes = Base64.decode(certTestABC_4);
+//        try {
+//            cert = CertTools.getCertfromByteArray( certInBytes);
+//        } catch (CertificateParsingException e) {
+//            assertEquals("Certificate encoding issue: "+e.getMessage(),false);
+//        }
+//        
+//        // Construct the LDAP DN
+//        String userDN = publ.constructLDAPDN(CertTools.getSubjectDN(cert), null);
+//        
+//        // Ensure the User doesn't exit
+//        deleteNode( userDN, false);
+//        
+//       
+//        try {
+//            // Publish cert. We can assume this works because we have tested it earlier
+//            publ.storeCertificate(null,  cert, "UnitTestNash1", null, null, null, CertificateConstants.CERT_ACTIVE, CertificateConstants.CERTTYPE_ENDENTITY, 0, 0, null, 0, 0, null );
+//            // Revoke cert
+//            publ.storeCertificate(null,  cert, "UnitTestNash1", null, null, null, CertificateConstants.CERT_REVOKED, CertificateConstants.CERTTYPE_ENDENTITY, 0, 0, null, 0, 0, null );
+//        } catch (PublisherException e) {
+//            assertTrue("Unexpected Publisher exception: "+e,false);
+//        }
+//
+//        // Check the LDAP entry exists but has no certificates
+//        LDAPConnection lc = null;
+//        try {
+//           
+//            lc = publ.createLdapConnection();
+//            lc.connect( HOSTNAMES, Integer.parseInt(PORT));
+//            lc.bind( LDAPConnection.LDAP_V3, publ.getLoginDN(), publ.getLoginPassword().getBytes(StandardCharsets.UTF_8), publ.ldapBindConstraints);
+//            LDAPEntry le = lc.read( userDN,  publ.ldapSearchConstraints);
+//            assertTrue("LDAP entry for the user should  exist.",le != null);
+// 
+//            // Check there are only one cert.
+//            LDAPAttribute la = le.getAttribute( "userCertificate;binary");
+//            assertTrue("The userCertificate attribute should not exist", la ==null);
+//
+//          
+//            // Main things checked at this point.
+//            // Leave LDAP entry for next test
+//            
+//        } catch ( LDAPException e) {
+//            // Expecting a no such object error
+//            if(e.getResultCode() != LDAPException.NO_SUCH_OBJECT) {
+//                assertTrue("Unexpected LDAP exception: "+e,false);
+//            }
+//        } finally {
+//            if (lc != null) {
+//                try {
+//                    lc.disconnect();
+//                } catch (LDAPException e) {
+//                    //
+//                }
+//            }
+//        }
+//    }
+//
+//
+//    
+//    @Test
+//    public void B9_InvalidCPOid() {
+//        // Tests:
+//        //   1. Certs are not published unless they have a valid CP OID.
+//        //   2. No exceptions raised.
+//        
+//        NASHLdapPublisher publ = new NASHLdapPublisher();
+//        Properties pros = new Properties();
+//        pros.setProperty( publ.HOSTNAMES, HOSTNAMES);
+//        pros.setProperty( publ.PORT, PORT);
+//        pros.setProperty( publ.LOGINDN, LOGINDN);
+//        pros.setProperty( publ.LOGINPASSWORD, LOGINPASSWORD);
+//        pros.setProperty( publ.BASEDN, BASEDN);
+//
+//        // Policy OIDs here should not publish the test certs.
+//        pros.setProperty( publ.VALIDCPOIDS, "1.3.36.174030967.1.20.1.1;1.2.36.174030967.1.22.1.2");
+//        pros.setProperty( publ.CONNECTIONSECURITY, CONNECTIONSECURITY);
+//        publ.init( pros);
+//
+//        // Try two different certs, neither should work.
+//        Certificate cert3=null;
+//        Certificate cert4=null;
+//        byte[] certInBytes3= Base64.decode(certTestABC_3);
+//        byte[] certInBytes4 = Base64.decode(certTestABC_4);
+//        try {
+//            cert3 = CertTools.getCertfromByteArray( certInBytes3);
+//            cert4 = CertTools.getCertfromByteArray( certInBytes4);
+//        } catch (CertificateParsingException e) {
+//            assertEquals("Certificate encoding issue: "+e.getMessage(),false);
+//        }
+//        
+//        // Construct the LDAP DN
+//        String userDN = publ.constructLDAPDN(CertTools.getSubjectDN(cert4), null);
+//        
+//        // Ensure the User doesn't exit
+//        deleteNode( userDN, false);
+//        
+//       
+//        try {
+//            // Try to publish cert.
+//            publ.storeCertificate(null,  cert3, "UnitTestNash1", null, null, null, CertificateConstants.CERT_ACTIVE, CertificateConstants.CERTTYPE_ENDENTITY, 0, 0, null, 0, 0, null );
+//            publ.storeCertificate(null,  cert4, "UnitTestNash1", null, null, null, CertificateConstants.CERT_ACTIVE, CertificateConstants.CERTTYPE_ENDENTITY, 0, 0, null, 0, 0, null );
+//        } catch (PublisherException e) {
+//            assertTrue("Unexpected Publisher exception: "+e,false);
+//        }
+//
+//        // Check the LDAP entry should not exists 
+//        LDAPConnection lc = null;
+//        try {
+//           
+//            lc = publ.createLdapConnection();
+//            lc.connect( HOSTNAMES, Integer.parseInt(PORT));
+//            lc.bind( LDAPConnection.LDAP_V3, publ.getLoginDN(), publ.getLoginPassword().getBytes(StandardCharsets.UTF_8), publ.ldapBindConstraints);
+//            LDAPEntry le = lc.read( userDN,  publ.ldapSearchConstraints);
+//            assertTrue("LDAP entry for the user should not exist.",le == null);
+// 
+//          
+//            // Main things checked at this point.
+//            // Leave LDAP entry for next test
+//            
+//        } catch ( LDAPException e) {
+//            // Expecting a no such object error
+//            if(e.getResultCode() != LDAPException.NO_SUCH_OBJECT) {
+//                assertTrue("Unexpected LDAP exception: "+e,false);
+//            }
+//        } finally {
+//            if (lc != null) {
+//                try {
+//                    lc.disconnect();
+//                } catch (LDAPException e) {
+//                    //
+//                }
+//            }
+//        }
+//    }
+//
+//    
  
     
     private static void deleteNode( String dn, boolean deleteParentNodes) {
