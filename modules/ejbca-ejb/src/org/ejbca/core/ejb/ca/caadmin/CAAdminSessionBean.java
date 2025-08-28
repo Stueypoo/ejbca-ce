@@ -1564,7 +1564,7 @@ public class CAAdminSessionBean implements CAAdminSessionLocal, CAAdminSessionRe
             catoken.setNextCertSignKey(nextKeyAlias);
             catoken.activateNextSignKey();
             activatedNextSignKey = true;
-        } else {
+        } else {c
             // Since we don't specified the nextSignKey, we will just try the current or next CA sign key
             try {
                 KeyTools.testKey(cryptoToken.getPrivateKey(catoken.getAliasFromPurpose(CATokenConstants.CAKEYPURPOSE_CERTSIGN)), caCertPublicKey,
@@ -2207,6 +2207,14 @@ public class CAAdminSessionBean implements CAAdminSessionLocal, CAAdminSessionRe
     private void renewCAInternal(final AuthenticationToken authenticationToken, int caid, final String nextSignKeyAlias, Date customNotBefore,
                                  final boolean createLinkCertificate, String newSubjectDN)
             throws AuthorizationDeniedException, CryptoTokenOfflineException, CANameChangeRenewalException {
+        renewCAInternal(admin, caid, nextSignKeyAlias, customNotBefore, createLinkCertificate, newSubjectDn, null);
+
+    }
+    
+    private void renewCAInternal(final AuthenticationToken authenticationToken, int caid, final String nextSignKeyAlias, Date customNotBefore,
+                                 final boolean createLinkCertificate, String newSubjectDN, int tokenIdWithNextSignKey)
+            throws AuthorizationDeniedException, CryptoTokenOfflineException, CANameChangeRenewalException {
+
         if (log.isTraceEnabled()) {
             log.trace(">CAAdminSession, renewCA(), caid=" + caid);
         }
@@ -2280,6 +2288,14 @@ public class CAAdminSessionBean implements CAAdminSessionLocal, CAAdminSessionRe
                 String msg = intres.getLocalizedMessage("error.catokenoffline", ca.getName());
                 throw new CryptoTokenOfflineException(msg);
             }
+
+            // Check the token status for next signing key (if different)
+            if (  tokenIdWithNextSignKey != null && cryptoTokenSession.getCryptoToken( tokenIdWithNextSignKey == CyptoToken.STATUS_OFFLINE)) {
+                log.error("The CryptoToken (Id=”+tokenIdWithNextSignKey+”) with the next signing key is offline");
+                throw new cryptoTokenOfflineException( "The CryptoToken (Id=”+tokenIdWithNextSignKey+”) with the next signing key is offline");
+
+            }
+
             if (ca.getSignedBy() == CAInfo.SIGNEDBYEXTERNALCA) {
                 // We should never get here
                 log.error("Directly renewing a CA signed by external can not be done");
@@ -2287,8 +2303,17 @@ public class CAAdminSessionBean implements CAAdminSessionLocal, CAAdminSessionRe
             }
 
             final CAToken caToken = ca.getCAToken();
-            final CryptoToken cryptoToken = cryptoTokenSession.getCryptoToken(caToken.getCryptoTokenId());
-            final String currentSignKeyAlias = caToken.getAliasFromPurpose(CATokenConstants.CAKEYPURPOSE_CRLSIGN);
+            final String currentSignKeyAlias = caToken.getAliasFromPurpose(CATokenConstants.CAKEYPURPOSE_CRLSIGN); // Why not CERTSIGN here ???
+     
+            final int currentTokenId =caToken.getCryptoTokenId();
+            // Get the CryptoToken with the next signing key
+            final CryptoToken cryptoToken = tokenIdWithNextSignKey==null?cryptoTokenSession.getCryptoToken(caToken.getCryptoTokenId()):cryptoTokenSession.getCryptoToken(tokenIdWithNextSignKey);
+
+            // Update CAToken if changing CryptoToken as part of renewal
+            if ( tokenIdWithNextSignKey){
+              caToken.setCryptoTokenId( tokenIdWithNextSignKey);
+            }
+            
             cryptoToken.testKeyPair(nextSignKeyAlias);
             caToken.setNextCertSignKey(nextSignKeyAlias);
             // Activate the next signing key(s) and generate audit log
