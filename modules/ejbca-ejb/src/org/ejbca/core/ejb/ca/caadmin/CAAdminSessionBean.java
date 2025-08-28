@@ -2135,6 +2135,17 @@ public class CAAdminSessionBean implements CAAdminSessionLocal, CAAdminSessionRe
             throw new IllegalStateException(e);
         }
     }
+    
+    public void renewCA(AuthenticationToken authenticationToken, int caid, boolean regenerateKeys, Date customNotBefore,
+                        final boolean createLinkCertificate, int tokenIdWithNextSignKey) throws AuthorizationDeniedException, CryptoTokenOfflineException {
+        try {
+            renewCAInternal(authenticationToken, caid, regenerateKeys, customNotBefore, createLinkCertificate, /*newSubjectDN=*/null, tokenIdWithNextSignKey);
+        } catch (CANameChangeRenewalException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+
 
     private void renewCAInternal(AuthenticationToken authenticationToken, int caid, boolean regenerateKeys, Date customNotBefore,
                                  final boolean createLinkCertificate, String newSubjectDn)
@@ -2410,13 +2421,15 @@ public class CAAdminSessionBean implements CAAdminSessionLocal, CAAdminSessionRe
             int caidBeforeNameChange = -1;
             if (subjectDNWillBeChanged) {
                 caidBeforeNameChange = caid;
-                ((X509CA) ca).createOrRemoveLinkCertificateDuringCANameChange(cryptoToken, createLinkCertificate, linkCertProfile, cceConfig,
+                // Link certs will need original CryptoToken to access previous signing key
+                ((X509CA) ca).createOrRemoveLinkCertificateDuringCANameChange(cryptoTokenSession.getCryptoToken(currentTokenId), createLinkCertificate, linkCertProfile, cceConfig,
                         oldCaCertificate);
                 caid = CAData.calculateCAId(newSubjectDN); // recalculate the CAID to corresponds to new CA
                 ca.setCAId(caid); // it was set to 0 above
                 caSession.addCA(authenticationToken, ca); //add new CA into database
             } else {
-                ca.createOrRemoveLinkCertificate(cryptoToken, createLinkCertificate, linkCertProfile, cceConfig, oldCaCertificate);
+                // Link certs will need original CryptoToken to access previous signing key
+                ca.createOrRemoveLinkCertificate(cryptoTokenSession.getCryptoToken(currentTokenId), createLinkCertificate, linkCertProfile, cceConfig, oldCaCertificate);
                 caSession.editCA(authenticationToken, ca, true);
             }
 
