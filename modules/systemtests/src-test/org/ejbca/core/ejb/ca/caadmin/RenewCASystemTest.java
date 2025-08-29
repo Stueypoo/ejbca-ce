@@ -411,4 +411,89 @@ public class RenewCASystemTest extends CaTestCase {
         }
         log.trace("<testRenewSubCAWithRenewCAWorker()");
     }
+
+                } catch (EJBException e) {
+                assertTrue(e.getMessage(), e.getMessage().contains("Supplied key (org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey) is not a RSAPrivateKey instance"));
+            }
+            // Check the CA's certificate still have has ML-DSA signing algorithm
+            final X509CAInfo newinfo = (X509CAInfo) caSession.getCAInfo(internalAdmin, getTestCAName());
+            final X509Certificate newcert = (X509Certificate) newinfo.getCertificateChain().iterator().next();
+            final String newSigAlg = AlgorithmTools.getSignatureAlgorithm(newcert);
+            assertEquals("Signature algorithm should still be ML-DSA-44", AlgorithmConstants.SIGALG_MLDSA44, newSigAlg);
+
+            // Check the Link certificate is still the old one
+            byte[] oldLinkCert = caAdminSession.getLatestLinkCertificate(newinfo.getCAId());
+            // java.util.Objects.deepEquals(Object, Object
+            assertTrue("Link certificate bytes should be the same, as it should be the old link certificate.", Objects.deepEquals(oldLinkCert, linkCertificateAfterRenewalBytes));
+        }
+
+    /** Test renewal of a CA using a different CyptoToken
+     */
+    @Test
+    public void testRenewCAWithAltCryptoToken() throws Exception {
+        log.trace(">testRenewCAWithAltCryptoToken()");
+
+        // Prepare to renew CA but with different CrytoToken
+        final X509CAInfo info = (X509CAInfo) caSession.getCAInfo(internalAdmin, getTestCAName());
+        final CAToken caToken = info.getCAToken();
+        final X509Certificate firstCert = (X509Certificate) info.getCertificateChain().iterator().next();
+        // Note the first CA public key
+        byte[] firstPubkey = firstCert.getPublicKey().getEncoded();
+        //assertFalse(Arrays.equals(orgkey, newkey));
+     
+        // Need a new CryptoToken
+        final int newCryptoTokenId = CryptoTokenTestUtils.createCryptoTokenForCA(null, "foo123".toCharArray(), true, false, "TestCaRenew", "1024", "1024", CAToken.SOFTPRIVATESIGNKEYALIAS, CAToken.SOFTPRIVATEDECKEYALIAS);
+        try{
+            // Do the CA renewal
+            caAdminSession.renewCA(internalAdmin, info.getCAId(), "TestCaRenew", null, /*CreateLinkCert*/true, newCryptoTokenId);
+        } catch (EJBException e) {
+            assertTrue("CA renewal caused exception: "+e.getMessage(), true);
+        }
+        // Check the CA's certificate still have has ML-DSA signing algorithm
+        final X509CAInfo newinfo = (X509CAInfo) caSession.getCAInfo(internalAdmin, getTestCAName());
+        final X509Certificate newcert = (X509Certificate) newinfo.getCertificateChain().iterator().next();
+        // Note the new CA public key
+        byte[] newPubkey = newcert.getPublicKey().getEncoded();
+        assertFalse(Arrays.equals(firstPubKey, newPubKey));
+
+        // The CA info should indicate updated CryptoToken
+        int reportedCryptoTokenId = newInfo.getCAToken().getCryptoTokenId();
+        assertEquals("Wrong CryptoToken reported by CA.", reportedCryptoTokenId, newCryptoTokenId);
+
+        
+            // Check the Link certificate was signed using the previous Signing Algorithm
+            byte[] linkCertificateAfterRenewalBytes = caAdminSession.getLatestLinkCertificate(newinfo.getCAId());
+            assertNotNull("There is no available link certificate after CA renewal with EC key", linkCertificateAfterRenewalBytes);
+            final X509Certificate linkCertificateAfterRenewal = CertTools.getCertfromByteArray(linkCertificateAfterRenewalBytes, X509Certificate.class);
+            assertEquals("The link certificate should be signed by the CA's previous signing algorithm", previousSigAlg.toUpperCase(), CertTools.getCertSignatureAlgorithmNameAsString(linkCertificateAfterRenewal).toUpperCase());
+
+            // Check the SignatureAlgorithm on the CA's Token is still set correctly
+            assertEquals("The signature algorithm on the CA's token was changed and should be ECDSA", AlgorithmConstants.SIGALG_SHA256_WITH_ECDSA, caToken.getSignatureAlgorithm());
+
+            // Check the link certificates IssuerDN matches the original CA's SubjectDN
+            assertEquals("The IssuerDN of the link certificate does not match the SubjectDN of the old CA certificate.", orgcert.getSubjectDN(), linkCertificateAfterRenewal.getIssuerDN());
+
+            // Check the link certificates SubjectDN does not matches the original CA's SubjectDN
+            assertNotEquals("The SubjectDN of the link certificate should not match the SubjectDN of the old CA certificate.", orgcert.getSubjectDN(), linkCertificateAfterRenewal.getSubjectDN());
+
+            // Check the link cert's SubjectDN matches the renewed CA's SubjectDN
+            // Note: There is a Name change occurring
+            assertEquals("The SubjectDN of the link certificate should match the SubjectDN of the renewed CA certificate.", newcert.getSubjectDN(), linkCertificateAfterRenewal.getSubjectDN());
+
+            // Check validity period, notAfter in the link certificate should be same as notAfter in the old CA certificate
+            assertEquals("notAfter in the link certificate should be the same as notAfter in the old CA certificate.", orgcert.getNotAfter(), linkCertificateAfterRenewal.getNotAfter());
+            // notBefore in the link certificate should be same as notBefore in the new CA certificate
+            assertEquals("notBefore in the link certificate should be the same as notBefore in the new CA certificate.", newcert.getNotBefore(), linkCertificateAfterRenewal.getNotBefore());
+        } finally {
+            // Clean up the renewed CA with name change
+            removeTestCA(newCAName);
+            internalCertificateStoreSession.removeCRLs(internalAdmin, newSubjectDN);
+            // Ensure the global configuration is reverted.
+            globalConfiguration.setEnableIcaoCANameChange(backupEnableIcaoCANameChangeValue);
+            globalConfigSession.saveConfiguration(internalAdmin, globalConfiguration);
+        }
+        log.trace("<testRenewCAChangeKeyAlgWithNameChange()");
+    }
+
+
 }
