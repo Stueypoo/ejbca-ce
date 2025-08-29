@@ -432,67 +432,47 @@ public class RenewCASystemTest extends CaTestCase {
     @Test
     public void testRenewCAWithAltCryptoToken() throws Exception {
         log.trace(">testRenewCAWithAltCryptoToken()");
-
-        // Prepare to renew CA but with different CrytoToken
-        final X509CAInfo info = (X509CAInfo) caSession.getCAInfo(internalAdmin, getTestCAName());
-        final CAToken caToken = info.getCAToken();
-        final X509Certificate firstCert = (X509Certificate) info.getCertificateChain().iterator().next();
-        // Note the first CA public key
-        byte[] firstPubkey = firstCert.getPublicKey().getEncoded();
-        //assertFalse(Arrays.equals(orgkey, newkey));
-     
-        // Need a new CryptoToken
-        final int newCryptoTokenId = CryptoTokenTestUtils.createCryptoTokenForCA(null, "foo123".toCharArray(), true, false, "TestCaRenew", "1024", "1024", CAToken.SOFTPRIVATESIGNKEYALIAS, CAToken.SOFTPRIVATEDECKEYALIAS);
         try{
+          // Prepare to renew CA but with different CrytoToken
+          final X509CAInfo info = (X509CAInfo) caSession.getCAInfo(internalAdmin, getTestCAName());
+          final CAToken caToken = info.getCAToken();
+          final X509Certificate firstCert = (X509Certificate) info.getCertificateChain().iterator().next();
+          // Note the first CA public key
+          byte[] firstPubkey = firstCert.getPublicKey().getEncoded();
+        
+          // Need a new CryptoToken
+          final int newCryptoTokenId = CryptoTokenTestUtils.createCryptoTokenForCA(null, "foo123".toCharArray(), true, false, "CaRenewCryptoToken", "1024", "1024", "NewSignKey", "NewEncKey");
+          try{
             // Do the CA renewal
-            caAdminSession.renewCA(internalAdmin, info.getCAId(), "TestCaRenew", null, /*CreateLinkCert*/true, newCryptoTokenId);
-        } catch (EJBException e) {
+            caAdminSession.renewCA(internalAdmin, info.getCAId(), "NewSignKey", null, /*CreateLinkCert*/true, newCryptoTokenId);
+          } catch (EJBException e) {
             assertTrue("CA renewal caused exception: "+e.getMessage(), true);
-        }
-        // Check the CA's certificate still have has ML-DSA signing algorithm
-        final X509CAInfo newinfo = (X509CAInfo) caSession.getCAInfo(internalAdmin, getTestCAName());
-        final X509Certificate newcert = (X509Certificate) newinfo.getCertificateChain().iterator().next();
-        // Note the new CA public key
-        byte[] newPubkey = newcert.getPublicKey().getEncoded();
-        assertFalse(Arrays.equals(firstPubKey, newPubKey));
+          }
+          // Check the CA
+          final X509CAInfo newinfo = (X509CAInfo) caSession.getCAInfo(internalAdmin, getTestCAName());
+          final X509Certificate newcert = (X509Certificate) newinfo.getCertificateChain().iterator().next();
+          // Confirm the CA public key has changed.
+          byte[] newPubkey = newcert.getPublicKey().getEncoded();
+          assertFalse(Arrays.equals(firstPubKey, newPubKey));
 
-        // The CA info should indicate updated CryptoToken
-        int reportedCryptoTokenId = newInfo.getCAToken().getCryptoTokenId();
-        assertEquals("Wrong CryptoToken reported by CA.", reportedCryptoTokenId, newCryptoTokenId);
+          // The CA info should indicate updated CryptoToken
+          int reportedCryptoTokenId = newInfo.getCAToken().getCryptoTokenId();
+          assertEquals("Wrong CryptoToken reported by CA.", reportedCryptoTokenId, newCryptoTokenId);
 
         
-            // Check the Link certificate was signed using the previous Signing Algorithm
-            byte[] linkCertificateAfterRenewalBytes = caAdminSession.getLatestLinkCertificate(newinfo.getCAId());
-            assertNotNull("There is no available link certificate after CA renewal with EC key", linkCertificateAfterRenewalBytes);
-            final X509Certificate linkCertificateAfterRenewal = CertTools.getCertfromByteArray(linkCertificateAfterRenewalBytes, X509Certificate.class);
-            assertEquals("The link certificate should be signed by the CA's previous signing algorithm", previousSigAlg.toUpperCase(), CertTools.getCertSignatureAlgorithmNameAsString(linkCertificateAfterRenewal).toUpperCase());
-
-            // Check the SignatureAlgorithm on the CA's Token is still set correctly
-            assertEquals("The signature algorithm on the CA's token was changed and should be ECDSA", AlgorithmConstants.SIGALG_SHA256_WITH_ECDSA, caToken.getSignatureAlgorithm());
-
-            // Check the link certificates IssuerDN matches the original CA's SubjectDN
-            assertEquals("The IssuerDN of the link certificate does not match the SubjectDN of the old CA certificate.", orgcert.getSubjectDN(), linkCertificateAfterRenewal.getIssuerDN());
-
-            // Check the link certificates SubjectDN does not matches the original CA's SubjectDN
-            assertNotEquals("The SubjectDN of the link certificate should not match the SubjectDN of the old CA certificate.", orgcert.getSubjectDN(), linkCertificateAfterRenewal.getSubjectDN());
-
-            // Check the link cert's SubjectDN matches the renewed CA's SubjectDN
-            // Note: There is a Name change occurring
-            assertEquals("The SubjectDN of the link certificate should match the SubjectDN of the renewed CA certificate.", newcert.getSubjectDN(), linkCertificateAfterRenewal.getSubjectDN());
-
-            // Check validity period, notAfter in the link certificate should be same as notAfter in the old CA certificate
-            assertEquals("notAfter in the link certificate should be the same as notAfter in the old CA certificate.", orgcert.getNotAfter(), linkCertificateAfterRenewal.getNotAfter());
-            // notBefore in the link certificate should be same as notBefore in the new CA certificate
-            assertEquals("notBefore in the link certificate should be the same as notBefore in the new CA certificate.", newcert.getNotBefore(), linkCertificateAfterRenewal.getNotBefore());
+          // Check the Link certificate was signed using the previous Signing key
+          byte[] linkCertificateAfterRenewalBytes = caAdminSession.getLatestLinkCertificate(newinfo.getCAId());
+          assertNotNull("There is no available link certificate after CA renewal with alternate CryptoToken", linkCertificateAfterRenewalBytes);
+          final X509Certificate linkCertificateAfterRenewal = CertTools.getCertfromByteArray(linkCertificateAfterRenewalBytes, X509Certificate.class);
+          assertTrue("The link certificate should be signed by the CA's previous signing key", linkCertificateAfterRenewal.verify( firstCert.getPublicKey, "BC"));
+          assertEquals("The link certificate should have public key of renewed CA.", linkCertificateAfterRenewal.getPublicKey().getEncoded(), newPublicKey);
         } finally {
-            // Clean up the renewed CA with name change
+            // Clean up the renewed CA
             removeTestCA(newCAName);
-            internalCertificateStoreSession.removeCRLs(internalAdmin, newSubjectDN);
-            // Ensure the global configuration is reverted.
-            globalConfiguration.setEnableIcaoCANameChange(backupEnableIcaoCANameChangeValue);
-            globalConfigSession.saveConfiguration(internalAdmin, globalConfiguration);
+            // Remove new CryptoToken
+            cryptoTokenManagementSession.deleteCryptoToken(internalAdmin, newCryptoTokenId);
         }
-        log.trace("<testRenewCAChangeKeyAlgWithNameChange()");
+        log.trace("<testRenewCAChangeWithAltCryptoToken()");
     }
 
 
