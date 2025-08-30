@@ -2135,11 +2135,14 @@ public class CAAdminSessionBean implements CAAdminSessionLocal, CAAdminSessionRe
             throw new IllegalStateException(e);
         }
     }
-    
-    public void renewCA(AuthenticationToken authenticationToken, int caid, boolean regenerateKeys, Date customNotBefore,
-                        final boolean createLinkCertificate, int tokenIdWithNextSignKey) throws AuthorizationDeniedException, CryptoTokenOfflineException {
+
+    // Special CA renewal used to replace a CryptoToken
+    // For use with migrating to a different HSM.
+    // The new CryptoToken must exist and activated and the new signing key created.
+    public void renewCANewCryptoToken(AuthenticationToken authenticationToken, int caid, Date customNotBefore,
+                        final boolean createLinkCertificate, Integer tokenIdWithNextSignKey, String nextSignKeyAlias) throws AuthorizationDeniedException, CryptoTokenOfflineException {
         try {
-            renewCAInternal(authenticationToken, caid, regenerateKeys, customNotBefore, createLinkCertificate, /*newSubjectDN=*/null, tokenIdWithNextSignKey);
+            renewCAInternal(authenticationToken, caid, nextSignKeyAlias, false, customNotBefore, createLinkCertificate, /*newSubjectDN=*/null, tokenIdWithNextSignKey);
         } catch (CANameChangeRenewalException e) {
             throw new IllegalStateException(e);
         }
@@ -2223,7 +2226,7 @@ public class CAAdminSessionBean implements CAAdminSessionLocal, CAAdminSessionRe
     }
     
     private void renewCAInternal(final AuthenticationToken authenticationToken, int caid, final String nextSignKeyAlias, Date customNotBefore,
-                                 final boolean createLinkCertificate, String newSubjectDN, int tokenIdWithNextSignKey)
+                                 final boolean createLinkCertificate, String newSubjectDN, Integer tokenIdWithNextSignKey)
             throws AuthorizationDeniedException, CryptoTokenOfflineException, CANameChangeRenewalException {
 
         if (log.isTraceEnabled()) {
@@ -2323,6 +2326,8 @@ public class CAAdminSessionBean implements CAAdminSessionLocal, CAAdminSessionRe
             // Update CAToken if changing CryptoToken as part of renewal
             if ( tokenIdWithNextSignKey){
               caToken.setCryptoTokenId( tokenIdWithNextSignKey);
+              // With CryptoToken changing, need to ensure if other key types exist, these are removed or set to this new signing key.
+              @TODO 
             }
             
             cryptoToken.testKeyPair(nextSignKeyAlias);
