@@ -401,7 +401,7 @@ public class RenewCASystemTest extends CaTestCase {
             byte[] orgkey = orgSubCacert.getPublicKey().getEncoded();
             byte[] newkey = newcertnewkeys.getPublicKey().getEncoded();
             assertFalse(Arrays.equals(orgkey, newkey));
-        // Remove CA:s and Service...
+        // Remove CAs and Service...
         } finally {
             serviceSession.removeService(internalAdmin, "RenewCaServiceTestService");
             X509CAInfo caInfoSubCa = (X509CAInfo) caSession.getCAInfo(internalAdmin, "TestSubCaRenew");
@@ -412,20 +412,6 @@ public class RenewCASystemTest extends CaTestCase {
         log.trace("<testRenewSubCAWithRenewCAWorker()");
     }
 
-                } catch (EJBException e) {
-                assertTrue(e.getMessage(), e.getMessage().contains("Supplied key (org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey) is not a RSAPrivateKey instance"));
-            }
-            // Check the CA's certificate still have has ML-DSA signing algorithm
-            final X509CAInfo newinfo = (X509CAInfo) caSession.getCAInfo(internalAdmin, getTestCAName());
-            final X509Certificate newcert = (X509Certificate) newinfo.getCertificateChain().iterator().next();
-            final String newSigAlg = AlgorithmTools.getSignatureAlgorithm(newcert);
-            assertEquals("Signature algorithm should still be ML-DSA-44", AlgorithmConstants.SIGALG_MLDSA44, newSigAlg);
-
-            // Check the Link certificate is still the old one
-            byte[] oldLinkCert = caAdminSession.getLatestLinkCertificate(newinfo.getCAId());
-            // java.util.Objects.deepEquals(Object, Object
-            assertTrue("Link certificate bytes should be the same, as it should be the old link certificate.", Objects.deepEquals(oldLinkCert, linkCertificateAfterRenewalBytes));
-        }
 
     /** Test renewal of a CA using a different CyptoToken
      */
@@ -448,7 +434,7 @@ public class RenewCASystemTest extends CaTestCase {
           } catch (EJBException e) {
             assertTrue("CA renewal caused exception: "+e.getMessage(), true);
           }
-          // Check the CA
+          // Check the renewed CA
           final X509CAInfo newinfo = (X509CAInfo) caSession.getCAInfo(internalAdmin, getTestCAName());
           final X509Certificate newcert = (X509Certificate) newinfo.getCertificateChain().iterator().next();
           // Confirm the CA public key has changed.
@@ -459,13 +445,21 @@ public class RenewCASystemTest extends CaTestCase {
           int reportedCryptoTokenId = newInfo.getCAToken().getCryptoTokenId();
           assertEquals("Wrong CryptoToken reported by CA.", reportedCryptoTokenId, newCryptoTokenId);
 
+          // Check key names for sign, crl, enc
+          @TODO Should we run a test without enc key and with separate cert/crl sign as potential bug in code??
         
           // Check the Link certificate was signed using the previous Signing key
           byte[] linkCertificateAfterRenewalBytes = caAdminSession.getLatestLinkCertificate(newinfo.getCAId());
           assertNotNull("There is no available link certificate after CA renewal with alternate CryptoToken", linkCertificateAfterRenewalBytes);
           final X509Certificate linkCertificateAfterRenewal = CertTools.getCertfromByteArray(linkCertificateAfterRenewalBytes, X509Certificate.class);
-          assertTrue("The link certificate should be signed by the CA's previous signing key", linkCertificateAfterRenewal.verify( firstCert.getPublicKey, "BC"));
-          assertEquals("The link certificate should have public key of renewed CA.", linkCertificateAfterRenewal.getPublicKey().getEncoded(), newPublicKey);
+          // Verify link cert using first public key of CA
+          try{
+             linkCertificateAfterRenewal.verify( firstCert.getPublicKey, "BC");
+          } catch (EJBException e) {
+            assertTrue( "The link certificate should be signed by the CA's previous signing key, but exception raised during verify(): "+e.getMessage(), false);
+          }
+          // Check public key in link cert is the same as the new CA cert
+          assertTrue("The link certificate should have public key of renewed CA.", Arrays.equals( linkCertificateAfterRenewal.getPublicKey().getEncoded(), newPublicKey));
         } finally {
             // Clean up the renewed CA
             removeTestCA(newCAName);
