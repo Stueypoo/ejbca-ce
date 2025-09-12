@@ -78,23 +78,27 @@ import com.novell.ldap.LDAPSearchConstraints;
  *      a. LDAP entities will be created if required. Any intermediary nodes will also be created.
  *      b. End-entity may have multiple certificates.
  *      c. A revoked Emd-entity certificate will be removed from LDAP. If the End-Enity has no certificates, then that entry is removed. 
+ *   4. The default LDAP objectClasses are configurable. See Optional properties.
  *   
  * This publisher can be used for CA and End-Entity certificates, as well as to publish CRLs.
  * 
  *  
  *        
  * When configuring this publisher, the following properties are supported:
- *   hostnames=<LDAP host names or IPs. Use ';' to separate entries.> NOTE: Only one LDAP is actually updated as LDAP replication should update the others.
- *   port=<LDAP port as an integer>
- *   logindn=<LDAP administrator DN>
- *   loginpassword=<LDAP administrator password>
- *   basedn=<The 'Base DN' for the LDAP. This can be an empty string.>
- *   connectionsecurity=<Connection security is PLAIN (default), STARTTLS, or SSL>
+ *   MANDATORY:
+ *     hostnames=<LDAP host names or IPs. Use ';' to separate entries.> NOTE: Only one LDAP is actually updated as LDAP replication should update the others.
+ *     port=<LDAP port as an integer>
+ *     logindn=<LDAP administrator DN>
+ *     loginpassword=<LDAP administrator password>
+ *     basedn=<The 'Base DN' for the LDAP. This can be an empty string.>
+ *     connectionsecurity=<Connection security is PLAIN (default), STARTTLS, or SSL>
  *   
- *   Optional properties
- *   timeout=<Maximum timeout to establish a LDAP connection. Default=5000 milliseconds>
- *   readtimeout=<Maximum timeout for retrieving data from LDAP. Default=30000 milliseconds>
- *   storetimeout=<Maximum timeout for writing data into LDAP. Default=60000 milliseconds>
+ *   OPTIONAL:
+ *     caobjectclass=<String representing the LDAP objectClass for a CA>. Default="top;applicationProcess;certificationAuthority;certificationAuthority-V2" 
+ *     userobjectclass=<String representing the LDAP objectClass for a PKI user/EE>. Default="top;person;organizationalPerson;inetOrgPerson" 
+ *     timeout=<Maximum timeout to establish a LDAP connection. Default=5000 milliseconds>
+ *     readtimeout=<Maximum timeout for retrieving data from LDAP. Default=30000 milliseconds>
+ *     storetimeout=<Maximum timeout for writing data into LDAP. Default=60000 milliseconds>
  *
  */
 public class BasicLdapPublisher extends LdapPublisher implements ICustomPublisher{
@@ -107,12 +111,11 @@ public class BasicLdapPublisher extends LdapPublisher implements ICustomPublishe
 
 	// Defines a version reference. Allows for automatic upgrading of properties.
 	public static final float LATEST_VERSION = 1;
-	
-	
-//	// A new 'property' for this publisher.
-//	protected static final String VALIDCPOIDS = "validcpoids";
-//    private final ArrayList<String> listOfValidCPs = new ArrayList<String>();
 
+	// Overriding CA object to be more complete
+	public static final String DEFAULT_CAOBJECTCLASS       = "top;applicationProcess;certificationAuthority;certificationAuthority-V2";
+
+	
 	// The super class 'LdapPublisher' has these incorrect.
     protected static final String HOSTNAMES                = "hostnames";   // Fix super class
     protected static final String BASEDN                   = "basedn";      // Fix super class
@@ -134,10 +137,11 @@ public class BasicLdapPublisher extends LdapPublisher implements ICustomPublishe
         set.add(BASEDN);
         set.add(LOGINDN);
         set.add(LOGINPASSWORD);
+        set.add(CAOBJECTCLASS);
+        set.add(USEROBJECTCLASS);
         set.add(TIMEOUT);
         set.add(READTIMEOUT);
         set.add(STORETIMEOUT);
- //       set.add(VALIDCPOIDS);
         set.add(CONNECTIONSECURITY);
         return set;
     }
@@ -180,19 +184,16 @@ public class BasicLdapPublisher extends LdapPublisher implements ICustomPublishe
             if (properties.getProperty(CONNECTIONSECURITY).toLowerCase().startsWith("ss")) setConnectionSecurity( ConnectionSecurity.SSL);
         } else setConnectionSecurity( ConnectionSecurity.PLAIN);
         
-//        // Set the valid CP Oids for this Publisher
-//        if (properties.getProperty(VALIDCPOIDS) != null) {
-//            // Pass the CP Oids values that will be processed by this publisher. Use the separator ";"
-//            String[] oids = properties.getProperty(VALIDCPOIDS).split(";");
-//            for (String s : oids) {
-//                listOfValidCPs.add( s);
-//            }
-//        } else {
-//            // Set to a empty list.
-//            listOfValidCPs.clear();
-//        }
-//       
-        
+        // Check for updates to the objectClasses for CAs
+        if (properties.getProperty(CAOBJECTCLASS) != null) {
+            setCAObjectClass( properties.getProperty(CAOBJECTCLASS));
+        }
+
+        // Check for updates to the objectClasses for EEs
+        if (properties.getProperty(USEROBJECTCLASS) != null) {
+            setCAObjectClass( properties.getProperty(USEROBJECTCLASS));
+        }
+         
         // Timeouts - If not supplied then the defaults will be used.
         if (properties.getProperty(TIMEOUT) != null) {
             try {
@@ -245,6 +246,9 @@ public class BasicLdapPublisher extends LdapPublisher implements ICustomPublishe
 		setRemoveRevokedCertificates(true);   // Lets remove revoked certs. 
 		setRemoveUsersWhenCertRevoked(true);  // Lets remove the User entry if they do not have other certificates.
 		
+		// Overriding the super class
+	    setCAObjectClass(DEFAULT_CAOBJECTCLASS);
+
 	}
 
 
@@ -904,8 +908,8 @@ public class BasicLdapPublisher extends LdapPublisher implements ICustomPublishe
 
     @Override
     public boolean willPublishCertificate(int status, long revocationDate) {
-        // TODO Auto-generated method stub
-        return false;
+        // Always publish certs
+        return true;
     }
 
 
